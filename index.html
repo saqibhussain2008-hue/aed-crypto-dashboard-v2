@@ -68,10 +68,6 @@
 </head>
 <body class="min-h-screen p-4 sm:p-8">
 
-    <!-- TEMPORARY SETUP BAR: Displays UID if OWNER_ID is not yet set -->
-    <div id="setup-bar" class="fixed top-0 left-0 w-full p-2 text-center text-sm font-semibold z-50 bg-fuchsia-800 text-white hidden"></div>
-
-
     <header class="text-center mb-8">
         <h1 class="text-4xl font-extrabold text-slate-100 flex items-center justify-center">
             <i data-lucide="line-chart" class="icon-lg mr-3 neon-accent"></i>
@@ -223,9 +219,6 @@
         let isAuthReady = false;
         
         // Store real-time prices globally
-        let livePrices = {};
-        
-        // Portfolio state
         let investments = [];
         let userTheses = {}; // New global map for user thesis/notes
 
@@ -238,7 +231,6 @@
         const formStatusEl = document.getElementById('form-status');
         const investmentForm = document.getElementById('investment-form');
         const investmentCard = document.getElementById('investment-card');
-        const setupBar = document.getElementById('setup-bar');
         
         // Utility for exponential backoff retry logic
         async function fetchWithRetry(url, options = {}, maxRetries = 3) {
@@ -784,24 +776,26 @@
 
         // --- FIRESTORE OPERATIONS ---
 
-        // NEW: Collection reference points to a SHARDED (non-user-specific) path
+        // CORRECTED PATHS (Uses the simplified structure: artifacts/{appId}/collectionName/documentId)
+
+        // Path for portfolio entries: artifacts/{appId}/portfolio_entries
         function getCollectionRef() {
             if (!db) {
                 console.error("Firebase not initialized.");
                 return null;
             }
-            // Shared data storage path: /artifacts/{appId}/tracker/portfolio
-            return firebase.collection(db, `artifacts/${appId}/tracker/portfolio`);
+            // Correct Path: Collection/Document/Collection
+            return firebase.collection(db, `artifacts/${appId}/portfolio_entries`);
         }
 
-        // NEW: Thesis reference points to a SHARDED (non-user-specific) path
+        // Path for thesis document: artifacts/{appId}/config/thesis_data
         async function getThesisDocRef() {
             if (!db) {
                 console.error("Firebase not initialized for preferences.");
                 return null;
             }
-            // Shared data storage path for preferences: /artifacts/{appId}/tracker/preferences/thesis_data
-            return firebase.doc(db, `artifacts/${appId}/tracker/preferences/thesis_data`);
+            // Correct Path: Collection/Document/Collection/Document
+            return firebase.doc(db, `artifacts/${appId}/config/thesis_data`);
         }
 
         async function loadTheses() {
@@ -895,8 +889,9 @@
             // Write only allowed if current user is the owner
             if (userId !== OWNER_ID) return;
 
-            const portfolioRef = getCollectionRef();
-            if (!portfolioRef) return;
+            const docRef = firebase.doc(getCollectionRef(), id);
+            
+            if (!docRef) return;
 
             // Use a custom confirmation modal if this were a production app, but for simplicity in this single-file app:
             if (!window.confirm("Are you sure you want to remove this investment?")) {
@@ -904,8 +899,7 @@
             }
 
             try {
-                // Use the new shared path
-                const docRef = firebase.doc(db, `artifacts/${appId}/tracker/portfolio`, id);
+                // Correct Path: Collection/Document/Collection/Document
                 await firebase.deleteDoc(docRef);
                 console.log("Investment removed:", id);
                 // The onSnapshot listener will automatically update the UI
@@ -1001,18 +995,6 @@
                     // Log current user ID for easy setup/verification
                     console.log("Current User Authenticated. UID:", userId); 
                     
-                    // --- TEMPORARY SETUP DISPLAY ---
-                    if (OWNER_ID === 'PLACEHOLDER_OWNER_ID_HERE') {
-                        setupBar.classList.remove('hidden');
-                        setupBar.innerHTML = `
-                            SETUP NEEDED: Copy this ID: <strong>${userId}</strong>, then replace 
-                            'PLACEHOLDER_OWNER_ID_HERE' in the code AND the Firebase Rules.
-                        `;
-                    } else {
-                        setupBar.classList.add('hidden');
-                    }
-                    // -----------------------------
-
                     // Load user preferences (thesis) before drawing the market cards
                     await loadTheses(); 
                     // 3. Setup Portfolio Listener after auth is ready
