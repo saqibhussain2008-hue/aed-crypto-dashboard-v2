@@ -68,6 +68,10 @@
 </head>
 <body class="min-h-screen p-4 sm:p-8">
 
+    <!-- TEMPORARY SETUP BAR: Displays UID if OWNER_ID is not yet set -->
+    <div id="setup-bar" class="fixed top-0 left-0 w-full p-2 text-center text-sm font-semibold z-50 bg-fuchsia-800 text-white hidden"></div>
+
+
     <header class="text-center mb-8">
         <h1 class="text-4xl font-extrabold text-slate-100 flex items-center justify-center">
             <i data-lucide="line-chart" class="icon-lg mr-3 neon-accent"></i>
@@ -125,7 +129,7 @@
             </div>
 
             <!-- 2. Add Investment Form -->
-            <div class="card p-6">
+            <div id="investment-card" class="card p-6">
                 <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
                     <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
                     Add Investment
@@ -181,6 +185,26 @@
     <script type="module">
         // The main script block uses the globally exposed Firebase objects.
         
+        // ----------------------------------------------------------------------------------
+        // --- 1. CONFIGURATION FOR GITHUB PAGES (REQUIRED FIX) ---
+        // --- FIREBASE CONFIGURATION (NOW HARDCODED) ---
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyAI3Pl5vgTJmeAC7cZFcBH2DAmkDWuBjEc",
+            authDomain: "crypto-dashboard-58a99.firebaseapp.com",
+            projectId: "crypto-dashboard-58a99",
+            storageBucket: "crypto-dashboard-58a99.firebasestorage.app",
+            messagingSenderId: "1033795648349",
+            appId: "1:1033795648349:web:c965ff343a06a2cee3c6b4",
+            measurementId: "G-QS72PY0FND"
+        };
+        // ----------------------------------------------------------------------------------
+
+
+        // --- 2. OWNER CONFIGURATION (EDIT THIS LINE WITH YOUR UID) ---
+        // REPLACE THIS PLACEHOLDER with your actual UID found in the console logs (from the live site).
+        const OWNER_ID = 'PLACEHOLDER_OWNER_ID_HERE'; 
+        // -------------------------------------------------------------
+
         // Configuration
         const AED_RATE = 3.6725;
         const CRYPTO_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB"];
@@ -191,9 +215,9 @@
         let charts = {};
 
         // --- Firebase Setup ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = FIREBASE_CONFIG.appId || 'default-app-id'; // Use hardcoded appId now
+        const firebaseConfig = FIREBASE_CONFIG; // Use hardcoded config now
+        const initialAuthToken = null; // No custom token needed on public web
 
         let db, auth, userId = null;
         let isAuthReady = false;
@@ -213,6 +237,8 @@
         const totalValueEl = document.getElementById('total-value');
         const formStatusEl = document.getElementById('form-status');
         const investmentForm = document.getElementById('investment-form');
+        const investmentCard = document.getElementById('investment-card');
+        const setupBar = document.getElementById('setup-bar');
         
         // Utility for exponential backoff retry logic
         async function fetchWithRetry(url, options = {}, maxRetries = 3) {
@@ -584,6 +610,11 @@
                     const defaultThesisText = 'Click to set your plan (e.g., Short-term target: 100 AED, Long-term HODL).';
                     const savedThesis = userTheses[symbol] || defaultThesisText;
 
+                    // Determine if thesis editing should be allowed
+                    const isOwner = userId === OWNER_ID;
+                    const contentEditable = isOwner ? 'true' : 'false';
+                    const focusRingClass = isOwner ? 'focus:ring-fuchsia-500' : '';
+                    const cursorStyle = isOwner ? 'cursor-text' : 'cursor-default';
 
                     const html = `
                         <div class="card p-4 border border-slate-700 flex flex-col justify-between">
@@ -616,12 +647,12 @@
                             <!-- New Investment Thesis Section -->
                             <div class="mt-2 pt-2 border-t border-slate-700">
                                 <p class="text-xs font-medium text-slate-400 mb-1">My Thesis & Plan</p>
-                                <div contenteditable="true" 
+                                <div contenteditable="${contentEditable}" 
                                      id="thesis-${symbol}"
-                                     class="text-xs text-slate-200 bg-slate-700 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                                     class="text-xs text-slate-200 bg-slate-700 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 ${focusRingClass} ${cursorStyle}"
                                      data-symbol="${symbol}"
                                      data-default-text="${defaultThesisText}"
-                                     onblur="window.saveThesis(this)">
+                                     onblur="${isOwner ? 'window.saveThesis(this)' : ''}">
                                     ${savedThesis}
                                 
                                 </div>
@@ -645,6 +676,11 @@
                 
                 // Re-render lucide icons
                 window.lucide.createIcons();
+
+                // Hide investment form if not owner
+                if (!userId || userId !== OWNER_ID) {
+                    investmentCard.innerHTML = '<p class="text-slate-400 text-center p-4">Portfolio management is restricted to the owner only.</p>';
+                }
                 
             } catch (error) {
                 console.error("Error fetching market data:", error);
@@ -654,6 +690,9 @@
 
         function renderPortfolio() {
             if (!isAuthReady) return;
+
+            // Check ownership status for displaying delete buttons
+            const isOwner = userId === OWNER_ID;
 
             let totalInvestedAED = 0;
             let totalValueAED = 0;
@@ -700,6 +739,13 @@
                 }
                 // --- End SL/TP Logic ---
 
+                // Only show delete button if current user is the owner
+                const deleteButtonHtml = isOwner ? `
+                    <button onclick="window.removeInvestment('${item.id}')" class="mt-2 p-1 text-red-400 hover:text-red-300 rounded-full transition duration-150">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                ` : '';
+
                 const holdingHtml = `
                     <div id="holding-${item.id}" class="flex justify-between items-start p-3 rounded-lg border ${holdingClasses}">
                         <div class="flex-1 min-w-0">
@@ -716,9 +762,7 @@
                         <div class="text-right ml-4 min-w-[100px]">
                             <p class="text-lg font-bold ${pnlClass}">${pnl.toFixed(2)} AED</p>
                             <p class="text-sm ${pnlClass}">(${pnlPercent.toFixed(2)}%)</p>
-                            <button onclick="window.removeInvestment('${item.id}')" class="mt-2 p-1 text-red-400 hover:text-red-300 rounded-full transition duration-150">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                            ${deleteButtonHtml}
                         </div>
                     </div>
                 `;
@@ -740,22 +784,24 @@
 
         // --- FIRESTORE OPERATIONS ---
 
+        // NEW: Collection reference points to a SHARDED (non-user-specific) path
         function getCollectionRef() {
-            if (!db || !userId) {
-                console.error("Firebase not initialized or userId missing.");
+            if (!db) {
+                console.error("Firebase not initialized.");
                 return null;
             }
-            // Private data storage path: /artifacts/{appId}/users/{userId}/portfolio
-            return firebase.collection(db, `artifacts/${appId}/users/${userId}/portfolio`);
+            // Shared data storage path: /artifacts/{appId}/tracker/portfolio
+            return firebase.collection(db, `artifacts/${appId}/tracker/portfolio`);
         }
 
+        // NEW: Thesis reference points to a SHARDED (non-user-specific) path
         async function getThesisDocRef() {
-            if (!db || !userId) {
-                console.error("Firebase not initialized or userId missing for preferences.");
+            if (!db) {
+                console.error("Firebase not initialized for preferences.");
                 return null;
             }
-            // Private data storage path for preferences: /artifacts/${appId}/users/${userId}/preferences/thesis_data
-            return firebase.doc(db, `artifacts/${appId}/users/${userId}/preferences/thesis_data`);
+            // Shared data storage path for preferences: /artifacts/{appId}/tracker/preferences/thesis_data
+            return firebase.doc(db, `artifacts/${appId}/tracker/preferences/thesis_data`);
         }
 
         async function loadTheses() {
@@ -776,7 +822,8 @@
         }
 
         async function saveThesis(element) {
-            if (!isAuthReady || !userId) return;
+            // Write only allowed if current user is the owner
+            if (!isAuthReady || userId !== OWNER_ID) return;
 
             const symbol = element.getAttribute('data-symbol');
             const defaultText = element.getAttribute('data-default-text');
@@ -822,6 +869,9 @@
         }
         
         async function addInvestment(data) {
+            // Write only allowed if current user is the owner
+            if (userId !== OWNER_ID) return;
+
             const portfolioRef = getCollectionRef();
             if (!portfolioRef) {
                 formStatusEl.textContent = "Error: Authentication not complete.";
@@ -842,6 +892,9 @@
         }
 
         async function removeInvestment(id) {
+            // Write only allowed if current user is the owner
+            if (userId !== OWNER_ID) return;
+
             const portfolioRef = getCollectionRef();
             if (!portfolioRef) return;
 
@@ -851,7 +904,8 @@
             }
 
             try {
-                const docRef = firebase.doc(db, `artifacts/${appId}/users/${userId}/portfolio`, id);
+                // Use the new shared path
+                const docRef = firebase.doc(db, `artifacts/${appId}/tracker/portfolio`, id);
                 await firebase.deleteDoc(docRef);
                 console.log("Investment removed:", id);
                 // The onSnapshot listener will automatically update the UI
@@ -865,6 +919,14 @@
 
         investmentForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            
+            // Double check owner status on submission
+            if (userId !== OWNER_ID) {
+                formStatusEl.textContent = "Write access denied. Only the owner can modify the portfolio.";
+                formStatusEl.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+            
             formStatusEl.textContent = "";
 
             const currency = document.getElementById('currency').value;
@@ -907,29 +969,28 @@
         // --- INITIALIZATION ---
         
         async function initFirebase() {
-            if (!firebaseConfig) {
-                console.error("Firebase config is missing.");
+            if (!firebaseConfig || !firebaseConfig.projectId) {
+                console.error("Firebase configuration is missing or invalid. Portfolio tracking disabled.");
+                isAuthReady = true;
                 return;
             }
 
             // Set debug level for logging in console
             firebase.setLogLevel('debug');
             
-            const app = firebase.initializeApp(firebaseConfig);
-            db = firebase.getFirestore(app);
-            auth = firebase.getAuth(app);
-            
-            // 1. Authenticate user using custom token or anonymously
             try {
-                if (initialAuthToken) {
-                    await firebase.signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await firebase.signInAnonymously(auth);
-                }
-            } catch(error) {
-                console.error("Firebase Authentication failed:", error);
-                // Fallback to anonymous sign-in if custom token fails
+                const app = firebase.initializeApp(firebaseConfig);
+                db = firebase.getFirestore(app);
+                auth = firebase.getAuth(app);
+                
+                // 1. Authenticate user anonymously
                 await firebase.signInAnonymously(auth);
+
+            } catch(error) {
+                console.error("Firebase Initialization or Authentication failed:", error);
+                // If initialization fails, prevent listeners from running
+                isAuthReady = true; 
+                return; 
             }
             
             // 2. Set up Auth State Listener
@@ -937,13 +998,26 @@
                 if (user) {
                     userId = user.uid;
                     isAuthReady = true;
-                    console.log("User authenticated. ID:", userId);
+                    // Log current user ID for easy setup/verification
+                    console.log("Current User Authenticated. UID:", userId); 
+                    
+                    // --- TEMPORARY SETUP DISPLAY ---
+                    if (OWNER_ID === 'PLACEHOLDER_OWNER_ID_HERE') {
+                        setupBar.classList.remove('hidden');
+                        setupBar.innerHTML = `
+                            SETUP NEEDED: Copy this ID: <strong>${userId}</strong>, then replace 
+                            'PLACEHOLDER_OWNER_ID_HERE' in the code AND the Firebase Rules.
+                        `;
+                    } else {
+                        setupBar.classList.add('hidden');
+                    }
+                    // -----------------------------
+
                     // Load user preferences (thesis) before drawing the market cards
                     await loadTheses(); 
                     // 3. Setup Portfolio Listener after auth is ready
                     setupFirestoreListener();
                 } else {
-                    // This case should ideally not happen after init, but handle logged-out state.
                     userId = null;
                     isAuthReady = true; 
                     console.log("User logged out or unauthorized.");
@@ -953,10 +1027,10 @@
 
         // Main execution block
         document.addEventListener('DOMContentLoaded', function() {
-            if (firebaseConfig) {
+            if (FIREBASE_CONFIG && FIREBASE_CONFIG.projectId) {
                 initFirebase();
             } else {
-                console.warn("Firestore configuration not found. Portfolio tracking will be disabled.");
+                console.warn("Portfolio tracking is disabled. Please provide your Firebase configuration in the FIREBASE_CONFIG variable.");
                 isAuthReady = true;
             }
             
