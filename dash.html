@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saqib Hussain Crypto Tracker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load Chart.js for Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0F172A; /* Slate 900 - Deep background */
+            color: #E2E8F0; /* Slate 200 - Default text */
+        }
+        .card {
+            background-color: #1E293B; /* Slate 800 - Card background */
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); /* Subtle Fuchsia Glow */
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            background-color: #334155; /* Slate 700 on hover */
+        }
+        /* Neon Accents (Fuchsia/Purple) */
+        .neon-accent { color: #A855F7; } /* Fuchsia 500 */
+        
+        /* Signal Colors */
+        .signal-buy { background-color: #10b981; color: white; } /* Emerald 500 */
+        .signal-sell { background-color: #ef4444; color: white; } /* Red 500 */
+        .signal-hold { background-color: #fbbf24; color: black; } /* Amber 400 */
+        
+        /* P/L Status */
+        .status-profit { color: #34D399; } /* Emerald 400 */
+        .status-loss { color: #F87171; } /* Red 400 */
+        .status-zero { color: #94A3B8; } /* Slate 400 */
+        
+        .icon-lg { width: 24px; height: 24px; }
+        .price-up { color: #34D399; }
+        .price-down { color: #F87171; }
+        /* MACD Histogram colors */
+        .macd-hist-up { color: #34D399; }
+        .macd-hist-down { color: #F87171; }
+        
+        /* SL/TP Alerts - Adjusted for dark mode contrast */
+        .alert-sl { background-color: #450A0A; border: 1px solid #B91C1C; color: #FCA5A5; } /* Dark Red */
+        .alert-tp { background-color: #064E3B; border: 1px solid #10B981; color: #A7F3D0; } /* Dark Green */
+    </style>
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Expose Firebase objects globally for use in the main script block
+        window.firebase = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+            getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField,
+            setLogLevel
+        };
+    </script>
+</head>
+<body class="min-h-screen p-4 sm:p-8">
+
+    <header class="text-center mb-8">
+        <h1 class="text-4xl font-extrabold text-slate-100 flex items-center justify-center">
+            <i data-lucide="line-chart" class="icon-lg mr-3 neon-accent"></i>
+            Saqib Hussain Crypto Tracker
+        </h1>
+        <p class="text-slate-400 mt-2">Real-time prices, **High-Conviction** signals, and portfolio tracker.</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto space-y-8">
+
+        <!-- Disclaimer -->
+        <div id="disclaimer" class="p-4 bg-yellow-900/40 border-l-4 border-yellow-500 text-yellow-300 rounded-md shadow-md">
+            <h3 class="font-bold text-lg mb-1">⚠️ Financial Disclaimer (5-Minute Interval)</h3>
+            <p class="text-sm">Signals are now based on **5-minute price data** for more stability. This dashboard is for **educational and simulation purposes only**; any real investment decisions are made at your own risk. Please use the "My Thesis & Plan" section to document your strategy.</p>
+        </div>
+
+        <!-- Real-Time Market Data -->
+        <section class="card p-6">
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">Market Data & Signals (USDT/AED - 5 Min Interval)</h2>
+            <div id="market-data-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Market data cards will be injected here -->
+                <p class="col-span-full text-center text-slate-400 py-4">Loading real-time data...</p>
+            </div>
+        </section>
+
+        <!-- Portfolio Management and Tracking -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- 1. Portfolio Summary -->
+            <div class="card p-6 lg:col-span-2">
+                <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                    <i data-lucide="wallet" class="mr-2 neon-accent"></i>
+                    My Portfolio Summary
+                </h2>
+                <div id="portfolio-summary" class="grid grid-cols-2 gap-4 border-b border-slate-700 pb-4 mb-4">
+                    <div class="p-3 bg-slate-700 rounded-lg">
+                        <p class="text-sm text-slate-400">Total Invested (AED)</p>
+                        <p id="total-invested" class="text-xl font-bold text-slate-100">0.00</p>
+                    </div>
+                    <div class="p-3 bg-slate-700 rounded-lg">
+                        <p class="text-sm text-slate-400">Total Current Value (AED)</p>
+                        <p id="total-value" class="text-xl font-bold text-slate-100">0.00</p>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-slate-400">Overall Profit / Loss (AED)</p>
+                    <p id="overall-pnl" class="text-3xl font-extrabold status-zero">0.00 (0.00%)</p>
+                </div>
+
+                <h3 class="text-xl font-medium text-slate-100 mb-3 border-t border-slate-700 pt-4">Current Holdings</h3>
+                <div id="holdings-list" class="space-y-2">
+                    <p class="text-center text-slate-400 py-4">No investments added yet.</p>
+                </div>
+            </div>
+
+            <!-- 2. Add Investment Form -->
+            <div class="card p-6">
+                <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                    <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
+                    Add Investment
+                </h2>
+                <form id="investment-form" class="space-y-4">
+                    <div>
+                        <label for="currency" class="block text-sm font-medium text-slate-400">Currency</label>
+                        <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-600 bg-slate-700 text-slate-200 focus:outline-none focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm rounded-md shadow-sm">
+                            <option value="">Select Coin</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="CAKE">PancakeSwap (CAKE)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="BNB">Binance Coin (BNB)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium text-slate-400">Quantity Purchased</label>
+                        <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5">
+                    </div>
+                    <div>
+                        <label for="price" class="block text-sm font-medium text-slate-400">Purchase Price (AED)</label>
+                        <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00">
+                    </div>
+
+                    <div class="border-t border-slate-700 pt-4 space-y-3">
+                        <p class="text-sm font-semibold text-slate-200">Risk Management (Optional)</p>
+                        <div>
+                            <label for="takeProfit" class="block text-xs font-medium text-slate-400">Take-Profit (TP) Price (AED)</label>
+                            <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00">
+                        </div>
+                        <div>
+                            <label for="stopLoss" class="block text-xs font-medium text-slate-400">Stop-Loss (SL) Price (AED)</label>
+                            <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                        Add Investment
+                    </button>
+                    <p id="form-status" class="text-center text-sm mt-2"></p>
+                </form>
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-slate-600 text-sm">
+        <p>Data provided by Binance Public API. Currency conversion based on fixed 1 USDT = 3.6725 AED rate. Signals are for educational purposes.</p>
+    </footer>
+
+    <script type="module">
+        // The main script block uses the globally exposed Firebase objects.
+        
+        // Configuration
+        const AED_RATE = 3.6725;
+        const CRYPTO_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB"];
+        const BINANCE_BASE_URL = "https://api.binance.com/api/v3";
+        const UPDATE_INTERVAL_MS = 15000; // 15 seconds update frequency (for UI update)
+
+        // Store Chart instances globally to destroy/re-render
+        let charts = {};
+
+        // --- Firebase Setup ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId = null;
+        let isAuthReady = false;
+        
+        // Store real-time prices globally
+        let livePrices = {};
+        
+        // Portfolio state
+        let investments = [];
+        let userTheses = {}; // New global map for user thesis/notes
+
+        // UI elements
+        const marketDataContainer = document.getElementById('market-data-container');
+        const holdingsList = document.getElementById('holdings-list');
+        const overallPnlEl = document.getElementById('overall-pnl');
+        const totalInvestedEl = document.getElementById('total-invested');
+        const totalValueEl = document.getElementById('total-value');
+        const formStatusEl = document.getElementById('form-status');
+        const investmentForm = document.getElementById('investment-form');
+        
+        // Utility for exponential backoff retry logic
+        async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed: ${error.message}`);
+                    if (i === maxRetries - 1) throw error; // Re-throw on last attempt
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        // --- TECHNICAL ANALYSIS FUNCTIONS (RSI + MA + MACD) ---
+        
+        // Helper to extract closing prices from Binance klines
+        function getClosingPrices(klines) {
+            // Kline structure: [openTime, openPrice, highPrice, lowPrice, closePrice, ...]
+            return klines.map(kline => parseFloat(kline[4]));
+        }
+
+        // Simple Moving Average (SMA) calculation for a given period
+        // MODIFIED to calculate historical series for charting
+        function calculateSMAHistory(prices, period) {
+            const smaValues = [];
+            for (let i = 0; i < prices.length; i++) {
+                if (i < period - 1) {
+                    smaValues.push(NaN); // Not enough data yet
+                } else {
+                    let sum = 0;
+                    // Sum the 'period' number of prices ending at index 'i'
+                    for (let j = 0; j < period; j++) {
+                        sum += prices[i - j];
+                    }
+                    smaValues.push(sum / period);
+                }
+            }
+            // Return the last calculated SMA for signal generation
+            const latestSMA = smaValues[smaValues.length - 1];
+            // Return the history array for charting
+            return { history: smaValues, latest: latestSMA };
+        }
+
+        // Relative Strength Index (RSI) calculation (ONLY LATEST VALUE NEEDED FOR SIGNAL LOGIC)
+        function calculateRSI(prices, period = 14) {
+            if (prices.length < period) return null;
+
+            let changes = [];
+            if (prices.length < period + 1) return null; 
+
+            // Calculate price changes (current - previous)
+            for (let i = prices.length - period; i < prices.length; i++) {
+                changes.push(prices[i] - prices[i - 1]);
+            }
+
+            let sumGain = changes.reduce((acc, c) => acc + Math.max(0, c), 0);
+            let sumLoss = changes.reduce((acc, c) => acc + Math.max(0, -c), 0);
+            
+            const avgGain = sumGain / period;
+            const avgLoss = sumLoss / period;
+
+            if (avgLoss === 0 && avgGain > 0) return 100;
+            if (avgGain === 0 && avgLoss > 0) return 0;
+            if (avgGain === 0 && avgLoss === 0) return 50;
+
+            const RS = avgGain / avgLoss;
+            const RSI = 100 - (100 / (1 + RS));
+            return RSI;
+        }
+        
+        // Exponential Moving Average (EMA) calculation (ONLY LATEST VALUE NEEDED FOR SIGNAL LOGIC)
+        function calculateEMA(prices, period) {
+            if (prices.length < period) return null;
+            const multiplier = 2 / (period + 1);
+            
+            // Calculate initial SMA for the first 'period' values to seed the EMA
+            let emaValue = 0;
+            for (let i = 0; i < period; i++) {
+                emaValue += prices[i];
+            }
+            emaValue /= period;
+
+            // Iterate from the 'period' start index to the end
+            for (let i = period; i < prices.length; i++) {
+                // EMA = (Close - Previous EMA) * Multiplier + Previous EMA
+                emaValue = (prices[i] - emaValue) * multiplier + emaValue;
+            }
+            return emaValue; // Returns the EMA of the last price point.
+        }
+
+        // MACD (Moving Average Convergence Divergence) calculation (ONLY LATEST VALUE NEEDED FOR SIGNAL LOGIC)
+        function calculateMACD(prices) {
+            const fastPeriod = 12; // 12-period EMA
+            const slowPeriod = 26; // 26-period EMA
+            const signalPeriod = 9; // 9-period EMA of the MACD line
+            
+            if (prices.length < slowPeriod) return null; 
+
+            let macdLineHistory = [];
+            for (let i = slowPeriod - 1; i < prices.length; i++) {
+                const subset = prices.slice(0, i + 1);
+                const fastEMA = calculateEMA(subset, fastPeriod);
+                const slowEMA = calculateEMA(subset, slowPeriod);
+
+                if (fastEMA !== null && slowEMA !== null) {
+                    macdLineHistory.push(fastEMA - slowEMA);
+                }
+            }
+            
+            if (macdLineHistory.length < signalPeriod) {
+                 return { macdLine: macdLineHistory.pop() || null, signalLine: null, histogram: null };
+            }
+            
+            const latestMacdLine = macdLineHistory[macdLineHistory.length - 1];
+            const signalLine = calculateEMA(macdLineHistory, signalPeriod);
+            const histogram = latestMacdLine - signalLine;
+
+            return { macdLine: latestMacdLine, signalLine, histogram };
+        }
+
+
+        // Generate a simulated signal based on MACD, RSI, and MA for high conviction
+        function generateSignal(symbol, price, klines) {
+            const closingPrices = getClosingPrices(klines);
+
+            // Calculate Indicators - Use EMA for signals for responsiveness
+            const ema12 = calculateEMA(closingPrices, 12);
+            const ema26 = calculateEMA(closingPrices, 26);
+            const rsi = calculateRSI(closingPrices, 14);
+            const macdData = calculateMACD(closingPrices);
+            
+            
+            let signal = 'HOLD';
+            let strategy = 'Waiting for confirmation.';
+            let icon = 'pause';
+            let advice = 'Low conviction. Await clearer trend and momentum alignment.';
+            let strength = '';
+
+            if (rsi === null || ema12 === null || ema26 === null || macdData.signalLine === null) { 
+                return { 
+                    signal: 'HOLD', 
+                    strategy: 'Gathering more data for indicators.', 
+                    advice: 'Hold off on trades. Missing data for robust analysis.', 
+                    icon: 'pause',
+                    longTermAdvice: 'Long-term trend assessment pending.',
+                    rsi: 'N/A',
+                    macd: 'N/A',
+                    signalLine: 'N/A',
+                    histogram: 'N/A'
+                };
+            }
+            
+            // MACD Checks
+            const isMacdBullish = macdData.macdLine > macdData.signalLine;
+            const isMacdBearish = macdData.macdLine < macdData.signalLine;
+            
+            // RSI Checks (Oversold < 30, Overbought > 70)
+            const isOversold = rsi < 30; 
+            const isOverbought = rsi > 70; 
+            const isRSIHealthyForBuy = rsi < 65;
+            const isRSIHealthyForSell = rsi > 35;
+            
+            // EMA Crossover Checks
+            const isGoldenCross = ema12 > ema26;
+            const isDeathCross = ema12 < ema26;
+
+            
+            // --- High Conviction BUY Signal ---
+            if (isMacdBullish && isGoldenCross && isRSIHealthyForBuy) {
+                signal = 'BUY';
+                icon = 'zap'; 
+                strategy = 'MACD Crossover (Momentum) + Golden Cross (Trend) confirmed.';
+                advice = 'High probability entry. Momentum shift aligned with underlying uptrend.';
+                strength = ' (High Conviction)';
+            } 
+            // --- High Conviction SELL Signal ---
+            else if (isMacdBearish && isDeathCross && isRSIHealthyForSell) {
+                signal = 'SELL';
+                icon = 'alert-triangle'; 
+                strategy = 'MACD Crossover (Momentum) + Death Cross (Trend) confirmed.';
+                advice = 'High probability exit/short. Momentum shift aligned with underlying downtrend.';
+                strength = ' (High Conviction)';
+            }
+            // --- Mid Conviction BUY Signal (Momentum shift, but trend is still bearish) ---
+            else if (isMacdBullish && isRSIHealthyForBuy && (isOversold || !isGoldenCross)) {
+                signal = 'HOLD'; // Downgrade to HOLD for safety due to opposing trend or oversold bounce risk
+                icon = 'trending-up';
+                strategy = 'MACD Bullish Crossover (Momentum). Weak trend bias or Oversold bounce.';
+                advice = 'Cautious mid-term buying opportunity. Wait for trend confirmation (Golden Cross).';
+                strength = ' (Mid Conviction)';
+            }
+            // --- Mid Conviction SELL Signal (Momentum shift, but trend is still bullish) ---
+            else if (isMacdBearish && isRSIHealthyForSell && (isOverbought || !isDeathCross)) {
+                signal = 'HOLD'; // Downgrade to HOLD for safety due to opposing trend or overbought reversal risk
+                icon = 'trending-down';
+                strategy = 'MACD Bearish Crossover (Momentum). Weak trend bias or Overbought correction.';
+                advice = 'Cautious mid-term selling opportunity. Wait for trend confirmation (Death Cross).';
+                strength = ' (Mid Conviction)';
+            }
+            // --- Default HOLD (Chop/Consolidation/Risk) ---
+            else {
+                signal = 'HOLD';
+                icon = 'pause';
+                strategy = `RSI: ${rsi.toFixed(2)}. Market consolidation or high risk (e.g., Overbought/Oversold).`;
+                advice = 'Stay on the sidelines. Low confidence in signals.';
+            }
+
+            
+            // Set Long-Term Advice based on Slow EMA
+            const longTermAdvice = closingPrices[closingPrices.length - 1] > ema26 ? 
+                                   'Long-term bias is bullish (Price > EMA 26).' : 
+                                   'Long-term bias is bearish or neutral (Price < EMA 26).';
+
+            return { 
+                signal, 
+                strategy: strategy + strength, 
+                advice, 
+                longTermAdvice, 
+                icon, 
+                rsi: rsi.toFixed(2),
+                macd: macdData.macdLine !== null ? macdData.macdLine.toFixed(4) : 'N/A',
+                signalLine: macdData.signalLine !== null ? macdData.signalLine.toFixed(4) : 'N/A',
+                histogram: macdData.histogram !== null ? macdData.histogram.toFixed(4) : 'N/A'
+            };
+        }
+        
+        // --- CHARTING FUNCTION ---
+        function renderChart(symbol, klines) {
+            const closingPrices = getClosingPrices(klines);
+            const sma12Data = calculateSMAHistory(closingPrices, 12);
+            const sma26Data = calculateSMAHistory(closingPrices, 26);
+            
+            const ctx = document.getElementById(`chart-${symbol}`);
+            if (!ctx) return;
+            
+            // Destroy previous chart instance if it exists
+            if (charts[symbol]) {
+                charts[symbol].destroy();
+            }
+
+            // Create labels for the x-axis (using the kline index, since timestamps are complex)
+            const labels = klines.map((_, index) => index);
+            
+            // Convert closing prices to AED for the chart
+            const chartData = closingPrices.map(priceUSD => priceUSD * AED_RATE);
+            const sma12ChartData = sma12Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
+            const sma26ChartData = sma26Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
+
+            charts[symbol] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Price (AED)',
+                            data: chartData,
+                            borderColor: '#A78BFA', /* Violet 400 for chart line */
+                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                            pointRadius: 0,
+                            borderWidth: 1.5,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'SMA 12',
+                            data: sma12ChartData,
+                            borderColor: '#10b981', // Emerald 500 (Faster MA)
+                            backgroundColor: '#10b981',
+                            pointRadius: 0,
+                            borderWidth: 1,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'SMA 26',
+                            data: sma26ChartData,
+                            borderColor: '#fbbf24', // Amber 400 (Slower MA)
+                            backgroundColor: '#fbbf24',
+                            pointRadius: 0,
+                            borderWidth: 1,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: false,
+                            // Ensure the Y axis scales nicely based on price data
+                            beginAtZero: false,
+                            suggestedMin: Math.min(...chartData.filter(v => !isNaN(v))) * 0.99,
+                            suggestedMax: Math.max(...chartData.filter(v => !isNaN(v))) * 1.01,
+                            grid: { color: 'rgba(71, 85, 105, 0.3)' } // Dark grid lines
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- DATA FETCHING & RENDERING ---
+
+        async function fetchRealTimeData() {
+            console.log("Fetching market data...");
+            marketDataContainer.innerHTML = '<p class="col-span-full text-center text-slate-400 py-4">Updating...</p>';
+            
+            const symbols = CRYPTO_SYMBOLS.map(s => s + 'USDT');
+            
+            try {
+                // 1. Fetch 24hr Ticker Data (for current price and % change)
+                const tickerUrl = `${BINANCE_BASE_URL}/ticker/24hr?symbols=["${symbols.join('","')}"]`;
+                const tickerData = await fetchWithRetry(tickerUrl);
+
+                // 2. Fetch Kline Data for all symbols (for MA/RSI/MACD calculation and Charting) 
+                const klinePromises = symbols.map(symbol => {
+                    // *** interval=5m ***
+                    const klineUrl = `${BINANCE_BASE_URL}/klines?symbol=${symbol}&interval=5m&limit=40`;
+                    return fetchWithRetry(klineUrl).catch(e => {
+                        console.error(`Failed to fetch klines for ${symbol}:`, e);
+                        return []; // Return empty array on failure
+                    });
+                });
+                const klinesResults = await Promise.all(klinePromises);
+                const klineMap = new Map();
+                symbols.forEach((symbol, index) => {
+                    klineMap.set(symbol.replace('USDT', ''), klinesResults[index]);
+                });
+
+
+                marketDataContainer.innerHTML = '';
+                const newPrices = {};
+                
+                tickerData.forEach(item => {
+                    const symbol = item.symbol.replace('USDT', '');
+                    const currentPriceUSD = parseFloat(item.lastPrice);
+                    const currentPriceAED = currentPriceUSD * AED_RATE;
+                    const priceChangePercent = parseFloat(item.priceChangePercent);
+                    const klines = klineMap.get(symbol);
+                    
+                    newPrices[symbol] = currentPriceAED;
+                    
+                    const signalInfo = generateSignal(symbol, currentPriceUSD, klines);
+                    
+                    const colorClass = signalInfo.signal === 'BUY' ? 'signal-buy' : 
+                                       signalInfo.signal === 'SELL' ? 'signal-sell' : 'signal-hold';
+                    
+                    const priceClass = priceChangePercent >= 0 ? 'price-up' : 'price-down';
+                    const sign = priceChangePercent >= 0 ? '+' : '';
+                    
+                    const macdHist = signalInfo.histogram !== 'N/A' ? parseFloat(signalInfo.histogram) : 0;
+                    const macdHistClass = macdHist >= 0 ? 'macd-hist-up' : 'macd-hist-down';
+                    
+                    const defaultThesisText = 'Click to set your plan (e.g., Short-term target: 100 AED, Long-term HODL).';
+                    const savedThesis = userTheses[symbol] || defaultThesisText;
+
+
+                    const html = `
+                        <div class="card p-4 border border-slate-700 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-xl font-bold text-slate-100">${symbol}</h3>
+                                <div class="px-3 py-1 text-xs font-semibold rounded-full shadow-md ${colorClass} flex items-center">
+                                    <i data-lucide="${signalInfo.icon}" class="w-4 h-4 mr-1"></i>
+                                    ${signalInfo.signal.toUpperCase()}
+                                </div>
+                            </div>
+                            <div class="flex flex-col mb-3">
+                                <p class="text-3xl font-extrabold ${priceClass}">${currentPriceAED.toFixed(2)} <span class="text-sm font-normal text-slate-400">AED</span></p>
+                                <p class="text-sm ${priceClass} mt-1">${sign}${priceChangePercent.toFixed(2)}% (24h)</p>
+                            </div>
+                            
+                            <!-- Chart Visualization -->
+                            <div class="h-24 w-full mb-3 border border-slate-600 rounded-md p-1 bg-slate-700">
+                                <canvas id="chart-${symbol}"></canvas>
+                            </div>
+                            
+                            <div class="space-y-1 text-sm text-slate-400 border-t border-slate-700 pt-2">
+                                <p><span class="font-medium">Signal Basis:</span> ${signalInfo.strategy}</p>
+                                <p><span class="font-medium">RSI (14):</span> ${signalInfo.rsi}</p>
+                                <p class="text-xs">
+                                    <span class="font-medium">MACD (12/26/9):</span> ${signalInfo.macd} / ${signalInfo.signalLine} 
+                                    <span class="font-bold ${macdHistClass}"> [Hist: ${signalInfo.histogram}]</span>
+                                </p>
+                                <p><span class="font-medium">LT View:</span> ${signalInfo.longTermAdvice}</p>
+                            </div>
+                            <!-- New Investment Thesis Section -->
+                            <div class="mt-2 pt-2 border-t border-slate-700">
+                                <p class="text-xs font-medium text-slate-400 mb-1">My Thesis & Plan</p>
+                                <div contenteditable="true" 
+                                     id="thesis-${symbol}"
+                                     class="text-xs text-slate-200 bg-slate-700 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                                     data-symbol="${symbol}"
+                                     data-default-text="${defaultThesisText}"
+                                     onblur="window.saveThesis(this)">
+                                    ${savedThesis}
+                                
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    marketDataContainer.innerHTML += html;
+                });
+                
+                // Update global prices and re-render portfolio
+                livePrices = newPrices;
+                renderPortfolio();
+
+                // RENDER CHARTS
+                CRYPTO_SYMBOLS.forEach(symbol => {
+                    const klines = klineMap.get(symbol);
+                    if (klines && klines.length > 0) {
+                        renderChart(symbol, klines);
+                    }
+                });
+                
+                // Re-render lucide icons
+                window.lucide.createIcons();
+                
+            } catch (error) {
+                console.error("Error fetching market data:", error);
+                marketDataContainer.innerHTML = '<p class="col-span-full text-center text-red-400 py-4">Failed to fetch data from Binance. Retrying shortly...</p>';
+            }
+        }
+
+        function renderPortfolio() {
+            if (!isAuthReady) return;
+
+            let totalInvestedAED = 0;
+            let totalValueAED = 0;
+
+            holdingsList.innerHTML = ''; // Clear existing list
+
+            if (investments.length === 0) {
+                holdingsList.innerHTML = '<p class="text-center text-slate-400 py-4">No investments added yet.</p>';
+            }
+
+            investments.forEach(item => {
+                const livePriceAED = livePrices[item.currency] || 0;
+                const investedAmount = item.quantity * item.purchasePriceAED;
+                const currentValue = item.quantity * livePriceAED;
+                const pnl = currentValue - investedAmount;
+                const pnlPercent = investedAmount > 0 ? (pnl / investedAmount) * 100 : 0;
+                
+                totalInvestedAED += investedAmount;
+                totalValueAED += currentValue;
+
+                const pnlClass = pnl > 0 ? 'status-profit' : pnl < 0 ? 'status-loss' : 'status-zero';
+                
+                // --- SL/TP Logic and Alert ---
+                let alertHtml = '';
+                let holdingClasses = "border-slate-700 bg-slate-800"; // Default dark mode background
+
+                const tpPrice = item.takeProfitAED;
+                const slPrice = item.stopLossAED;
+                
+                if (tpPrice && livePriceAED >= tpPrice) {
+                    alertHtml = `<p class="alert-tp text-xs font-semibold p-1 rounded-md mt-1 flex items-center"><i data-lucide="bell" class="w-3 h-3 mr-1"></i> TAKE PROFIT HIT: ${tpPrice.toFixed(2)} AED</p>`;
+                    holdingClasses = "alert-tp border-emerald-500 bg-emerald-900/40";
+                } else if (slPrice && livePriceAED <= slPrice) {
+                    alertHtml = `<p class="alert-sl text-xs font-semibold p-1 rounded-md mt-1 flex items-center"><i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i> STOP LOSS HIT: ${slPrice.toFixed(2)} AED</p>`;
+                    holdingClasses = "alert-sl border-red-500 bg-red-900/40";
+                } else if (tpPrice && livePriceAED > slPrice) {
+                    // Check if price is within 5% of TP or SL (excluding the hit scenario above)
+                    const proximityPercent = 0.05; 
+                    if (tpPrice > 0 && livePriceAED >= tpPrice * (1 - proximityPercent)) {
+                        alertHtml = `<p class="alert-tp text-xs font-semibold p-1 rounded-md mt-1">Approaching TP: ${tpPrice.toFixed(2)} AED</p>`;
+                    } else if (slPrice > 0 && livePriceAED <= slPrice * (1 + proximityPercent)) {
+                        alertHtml = `<p class="alert-sl text-xs font-semibold p-1 rounded-md mt-1">Approaching SL: ${slPrice.toFixed(2)} AED</p>`;
+                    }
+                }
+                // --- End SL/TP Logic ---
+
+                const holdingHtml = `
+                    <div id="holding-${item.id}" class="flex justify-between items-start p-3 rounded-lg border ${holdingClasses}">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-lg font-bold text-slate-100">${item.currency} <span class="text-sm font-normal text-slate-400">(${item.quantity.toFixed(4)})</span></p>
+                            <p class="text-xs text-slate-400 mt-1">
+                                Avg. Buy: ${item.purchasePriceAED.toFixed(2)} AED
+                            </p>
+                            <div class="text-xs text-slate-400 mt-1 space-x-2">
+                                ${item.takeProfitAED ? `<span class="font-semibold text-emerald-400">TP: ${item.takeProfitAED.toFixed(2)} AED</span>` : ''}
+                                ${item.stopLossAED ? `<span class="font-semibold text-red-400">SL: ${item.stopLossAED.toFixed(2)} AED</span>` : ''}
+                            </div>
+                            ${alertHtml}
+                        </div>
+                        <div class="text-right ml-4 min-w-[100px]">
+                            <p class="text-lg font-bold ${pnlClass}">${pnl.toFixed(2)} AED</p>
+                            <p class="text-sm ${pnlClass}">(${pnlPercent.toFixed(2)}%)</p>
+                            <button onclick="window.removeInvestment('${item.id}')" class="mt-2 p-1 text-red-400 hover:text-red-300 rounded-full transition duration-150">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                holdingsList.innerHTML += holdingHtml;
+            });
+
+            // Update Summary
+            const overallPNLValue = totalValueAED - totalInvestedAED;
+            const overallPNLPercent = totalInvestedAED > 0 ? (overallPNLValue / totalInvestedAED) * 100 : 0;
+            const overallPNLClass = overallPNLValue > 0 ? 'status-profit' : overallPNLValue < 0 ? 'status-loss' : 'status-zero';
+
+            totalInvestedEl.textContent = totalInvestedAED.toFixed(2);
+            totalValueEl.textContent = totalValueAED.toFixed(2);
+            overallPnlEl.textContent = `${overallPNLValue.toFixed(2)} AED (${overallPNLPercent.toFixed(2)}%)`;
+            overallPnlEl.className = `text-3xl font-extrabold ${overallPNLClass}`;
+            
+            window.lucide.createIcons();
+        }
+
+        // --- FIRESTORE OPERATIONS ---
+
+        function getCollectionRef() {
+            if (!db || !userId) {
+                console.error("Firebase not initialized or userId missing.");
+                return null;
+            }
+            // Private data storage path: /artifacts/{appId}/users/{userId}/portfolio
+            return firebase.collection(db, `artifacts/${appId}/users/${userId}/portfolio`);
+        }
+
+        async function getThesisDocRef() {
+            if (!db || !userId) {
+                console.error("Firebase not initialized or userId missing for preferences.");
+                return null;
+            }
+            // Private data storage path for preferences: /artifacts/${appId}/users/${userId}/preferences/thesis_data
+            return firebase.doc(db, `artifacts/${appId}/users/${userId}/preferences/thesis_data`);
+        }
+
+        async function loadTheses() {
+            const docRef = await getThesisDocRef();
+            if (!docRef) return;
+            
+            try {
+                const docSnap = await firebase.getDoc(docRef);
+                if (docSnap.exists()) {
+                    userTheses = docSnap.data().theses || {};
+                    console.log("User theses loaded:", userTheses);
+                } else {
+                    console.log("No existing user theses found.");
+                }
+            } catch (e) {
+                console.error("Error loading user theses:", e);
+            }
+        }
+
+        async function saveThesis(element) {
+            if (!isAuthReady || !userId) return;
+
+            const symbol = element.getAttribute('data-symbol');
+            const defaultText = element.getAttribute('data-default-text');
+            const content = element.textContent.trim() || defaultText;
+            
+            // Update local map
+            userTheses[symbol] = content;
+
+            const docRef = await getThesisDocRef();
+            if (!docRef) return;
+
+            try {
+                // Use setDoc with merge: true to avoid overwriting other data if the document exists
+                await firebase.setDoc(docRef, { theses: userTheses }, { merge: true });
+                console.log(`Thesis for ${symbol} saved.`);
+            } catch (e) {
+                console.error("Error saving thesis:", e);
+            }
+        }
+        window.saveThesis = saveThesis; // Expose globally for inline edit
+
+        function setupFirestoreListener() {
+            const portfolioRef = getCollectionRef();
+            if (!portfolioRef) return;
+
+            const q = firebase.query(portfolioRef);
+            
+            // Listen for real-time updates
+            firebase.onSnapshot(q, (snapshot) => {
+                const newInvestments = [];
+                snapshot.forEach((doc) => {
+                    newInvestments.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                investments = newInvestments;
+                console.log("Portfolio updated:", investments);
+                renderPortfolio();
+            }, (error) => {
+                console.error("Firestore listen error:", error);
+            });
+        }
+        
+        async function addInvestment(data) {
+            const portfolioRef = getCollectionRef();
+            if (!portfolioRef) {
+                formStatusEl.textContent = "Error: Authentication not complete.";
+                formStatusEl.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+
+            try {
+                await firebase.addDoc(portfolioRef, data);
+                formStatusEl.textContent = "Investment added successfully!";
+                formStatusEl.className = "text-emerald-400 text-sm mt-2";
+                investmentForm.reset();
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                formStatusEl.textContent = "Error saving investment. Check console for details.";
+                formStatusEl.className = "text-red-400 text-sm mt-2";
+            }
+        }
+
+        async function removeInvestment(id) {
+            const portfolioRef = getCollectionRef();
+            if (!portfolioRef) return;
+
+            // Use a custom confirmation modal if this were a production app, but for simplicity in this single-file app:
+            if (!window.confirm("Are you sure you want to remove this investment?")) {
+                return;
+            }
+
+            try {
+                const docRef = firebase.doc(db, `artifacts/${appId}/users/${userId}/portfolio`, id);
+                await firebase.deleteDoc(docRef);
+                console.log("Investment removed:", id);
+                // The onSnapshot listener will automatically update the UI
+            } catch (e) {
+                console.error("Error removing document: ", e);
+            }
+        }
+        window.removeInvestment = removeInvestment; // Make available globally for inline button click
+
+        // --- EVENT LISTENERS ---
+
+        investmentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            formStatusEl.textContent = "";
+
+            const currency = document.getElementById('currency').value;
+            const quantity = parseFloat(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+            // New inputs
+            const takeProfit = document.getElementById('takeProfit').value;
+            const stopLoss = document.getElementById('stopLoss').value;
+
+            if (!currency || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
+                formStatusEl.textContent = "Please fill out all mandatory fields with valid positive numbers.";
+                formStatusEl.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+
+            // Validate TP/SL relationship (SL should be below TP and Buy Price, TP should be above Buy Price)
+            if (takeProfit && parseFloat(takeProfit) <= price) {
+                formStatusEl.textContent = "Take-Profit should be higher than the Purchase Price.";
+                formStatusEl.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+            if (stopLoss && parseFloat(stopLoss) >= price) {
+                formStatusEl.textContent = "Stop-Loss should be lower than the Purchase Price.";
+                formStatusEl.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+
+
+            const newInvestment = {
+                currency: currency,
+                quantity: quantity,
+                purchasePriceAED: price,
+                takeProfitAED: takeProfit ? parseFloat(takeProfit) : null,
+                stopLossAED: stopLoss ? parseFloat(stopLoss) : null,
+                timestamp: new Date().toISOString()
+            };
+            addInvestment(newInvestment);
+        });
+        
+        // --- INITIALIZATION ---
+        
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                return;
+            }
+
+            // Set debug level for logging in console
+            firebase.setLogLevel('debug');
+            
+            const app = firebase.initializeApp(firebaseConfig);
+            db = firebase.getFirestore(app);
+            auth = firebase.getAuth(app);
+            
+            // 1. Authenticate user using custom token or anonymously
+            try {
+                if (initialAuthToken) {
+                    await firebase.signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await firebase.signInAnonymously(auth);
+                }
+            } catch(error) {
+                console.error("Firebase Authentication failed:", error);
+                // Fallback to anonymous sign-in if custom token fails
+                await firebase.signInAnonymously(auth);
+            }
+            
+            // 2. Set up Auth State Listener
+            firebase.onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    isAuthReady = true;
+                    console.log("User authenticated. ID:", userId);
+                    // Load user preferences (thesis) before drawing the market cards
+                    await loadTheses(); 
+                    // 3. Setup Portfolio Listener after auth is ready
+                    setupFirestoreListener();
+                } else {
+                    // This case should ideally not happen after init, but handle logged-out state.
+                    userId = null;
+                    isAuthReady = true; 
+                    console.log("User logged out or unauthorized.");
+                }
+            });
+        }
+
+        // Main execution block
+        document.addEventListener('DOMContentLoaded', function() {
+            if (firebaseConfig) {
+                initFirebase();
+            } else {
+                console.warn("Firestore configuration not found. Portfolio tracking will be disabled.");
+                isAuthReady = true;
+            }
+            
+            // Start fetching market data immediately and then set interval
+            fetchRealTimeData();
+            setInterval(fetchRealTimeData, UPDATE_INTERVAL_MS);
+        });
+
+    </script>
+</body>
+</html>
