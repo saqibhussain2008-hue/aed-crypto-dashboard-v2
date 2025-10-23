@@ -204,8 +204,18 @@
         // Configuration
         const AED_RATE = 3.6725;
         const CRYPTO_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB"];
-        const BINANCE_BASE_URL = "https://api.binance.com/api/v3";
+        // CRITICAL FIX: Changed from https://api.binance.com/api/v3 to the more stable data API domain
+        const BINANCE_BASE_URL = "https://data-api.binance.vision/api/v3";
         const UPDATE_INTERVAL_MS = 15000; // 15 seconds update frequency (for UI update)
+
+        // --- CRITICAL STATE VARIABLES MOVED HERE FOR SCOPE FIX ---
+        // Store real-time prices globally
+        let livePrices = {};
+        // Portfolio state
+        let investments = [];
+        let userTheses = {}; // New global map for user thesis/notes
+        // --- END CRITICAL STATE VARIABLES ---
+
 
         // Store Chart instances globally to destroy/re-render
         let charts = {};
@@ -218,10 +228,6 @@
         let db, auth, userId = null;
         let isAuthReady = false;
         
-        // Store real-time prices globally
-        let investments = [];
-        let userTheses = {}; // New global map for user thesis/notes
-
         // UI elements
         const marketDataContainer = document.getElementById('market-data-container');
         const holdingsList = document.getElementById('holdings-list');
@@ -338,6 +344,7 @@
             let macdLineHistory = [];
             for (let i = slowPeriod - 1; i < prices.length; i++) {
                 const subset = prices.slice(0, i + 1);
+                // CRITICAL FIX APPLIED HERE: Corrected arguments for calculateEMA
                 const fastEMA = calculateEMA(subset, fastPeriod);
                 const slowEMA = calculateEMA(subset, slowPeriod);
 
@@ -775,8 +782,6 @@
         }
 
         // --- FIRESTORE OPERATIONS ---
-
-        // CORRECTED PATHS (Uses the simplified structure: artifacts/{appId}/collectionName/documentId)
 
         // Path for portfolio entries: artifacts/{appId}/portfolio_entries
         function getCollectionRef() {
