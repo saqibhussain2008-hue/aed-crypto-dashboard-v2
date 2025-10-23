@@ -187,7 +187,7 @@
 
         // --- 2. OWNER CONFIGURATION (EDIT THIS LINE WITH YOUR UID) ---
         // UID HAS BEEN SUCCESSFULLY RETRIEVED AND HARDCODED:
-        const OWNER_ID = 'B0TSBMzkVnOUwQ6nueBWkCiKqdq2'; 
+        const OWNER_ID = 'OpICNqYsGaMNcRwQ6L3C9fx5wXz1'; 
         // -------------------------------------------------------------
 
         // Configuration
@@ -223,14 +223,14 @@
         const overallPnlEl = document.getElementById('overall-pnl');
         const totalInvestedEl = document.getElementById('total-invested');
         const totalValueEl = document.getElementById('total-value');
-        const formStatusEl = document.getElementById('form-status');
-        const investmentForm = document.getElementById('investment-form');
         const investmentCard = document.getElementById('investment-card');
         const loginModal = document.getElementById('login-modal');
         const loginForm = document.getElementById('login-form');
         const loginErrorMsg = document.getElementById('login-error-message');
         
-        // Utility for exponential backoff retry logic
+        // --- CORE FUNCTIONS DEFINED FIRST TO PREVENT REFERENCE ERRORS ---
+
+        // Utility functions
         async function fetchWithRetry(url, options = {}, maxRetries = 3) {
             for (let i = 0; i < maxRetries; i++) {
                 try {
@@ -248,44 +248,33 @@
             }
         }
 
-        // --- TECHNICAL ANALYSIS FUNCTIONS (RSI + MA + MACD) ---
-        
-        // Helper to extract closing prices from Binance klines
         function getClosingPrices(klines) {
-            // Kline structure: [openTime, openPrice, highPrice, lowPrice, closePrice, ...]
             return klines.map(kline => parseFloat(kline[4]));
         }
+        
+        // --- TECHNICAL ANALYSIS FUNCTIONS (RSI + MA + MACD) ---
 
-        // Simple Moving Average (SMA) calculation for a given period
-        // MODIFIED to calculate historical series for charting
         function calculateSMAHistory(prices, period) {
             const smaValues = [];
             for (let i = 0; i < prices.length; i++) {
                 if (i < period - 1) {
-                    smaValues.push(NaN); // Not enough data yet
+                    smaValues.push(NaN); 
                 } else {
                     let sum = 0;
-                    // Sum the 'period' number of prices ending at index 'i'
                     for (let j = 0; j < period; j++) {
                         sum += prices[i - j];
                     }
                     smaValues.push(sum / period);
                 }
             }
-            // Return the last calculated SMA for signal generation
             const latestSMA = smaValues[smaValues.length - 1];
-            // Return the history array for charting
             return { history: smaValues, latest: latestSMA };
         }
 
-        // Relative Strength Index (RSI) calculation (ONLY LATEST VALUE NEEDED FOR SIGNAL LOGIC)
         function calculateRSI(prices, period = 14) {
-            if (prices.length < period) return null;
-
-            let changes = [];
             if (prices.length < period + 1) return null; 
 
-            // Calculate price changes (current - previous)
+            let changes = [];
             for (let i = prices.length - period; i < prices.length; i++) {
                 changes.push(prices[i] - prices[i - 1]);
             }
@@ -305,38 +294,32 @@
             return RSI;
         }
         
-        // Exponential Moving Average (EMA) calculation (ONLY LATEST VALUE NEEDED FOR SIGNAL LOGIC)
         function calculateEMA(prices, period) {
             if (prices.length < period) return null;
             const multiplier = 2 / (period + 1);
             
-            // Calculate initial SMA for the first 'period' values to seed the EMA
             let emaValue = 0;
             for (let i = 0; i < period; i++) {
                 emaValue += prices[i];
             }
             emaValue /= period;
 
-            // Iterate from the 'period' start index to the end
             for (let i = period; i < prices.length; i++) {
-                // EMA = (Close - Previous EMA) * Multiplier + Previous EMA
                 emaValue = (prices[i] - emaValue) * multiplier + emaValue;
             }
-            return emaValue; // Returns the EMA of the last price point.
+            return emaValue; 
         }
 
-        // MACD (Moving Average Convergence Divergence) calculation (ONLY LATEST VALUE NEEDED FOR SIGNAL LOGIC)
         function calculateMACD(prices) {
-            const fastPeriod = 12; // 12-period EMA
-            const slowPeriod = 26; // 26-period EMA
-            const signalPeriod = 9; // 9-period EMA of the MACD line
+            const fastPeriod = 12; 
+            const slowPeriod = 26; 
+            const signalPeriod = 9; 
             
             if (prices.length < slowPeriod) return null; 
 
             let macdLineHistory = [];
             for (let i = slowPeriod - 1; i < prices.length; i++) {
                 const subset = prices.slice(0, i + 1);
-                // CRITICAL FIX APPLIED HERE: Corrected arguments for calculateEMA
                 const fastEMA = calculateEMA(subset, fastPeriod);
                 const slowEMA = calculateEMA(subset, slowPeriod);
 
@@ -357,16 +340,13 @@
         }
 
 
-        // Generate a simulated signal based on MACD, RSI, and MA for high conviction
         function generateSignal(symbol, price, klines) {
             const closingPrices = getClosingPrices(klines);
 
-            // Calculate Indicators - Use EMA for signals for responsiveness
             const ema12 = calculateEMA(closingPrices, 12);
             const ema26 = calculateEMA(closingPrices, 26);
             const rsi = calculateRSI(closingPrices, 14);
             const macdData = calculateMACD(closingPrices);
-            
             
             let signal = 'HOLD';
             let strategy = 'Waiting for confirmation.';
@@ -388,63 +368,44 @@
                 };
             }
             
-            // MACD Checks
             const isMacdBullish = macdData.macdLine > macdData.signalLine;
             const isMacdBearish = macdData.macdLine < macdData.signalLine;
-            
-            // RSI Checks (Oversold < 30, Overbought > 70)
-            const isOversold = rsi < 30; 
-            const isOverbought = rsi > 70; 
             const isRSIHealthyForBuy = rsi < 65;
             const isRSIHealthyForSell = rsi > 35;
-            
-            // EMA Crossover Checks
             const isGoldenCross = ema12 > ema26;
             const isDeathCross = ema12 < ema26;
 
             
-            // --- High Conviction BUY Signal ---
             if (isMacdBullish && isGoldenCross && isRSIHealthyForBuy) {
-                signal = 'BUY';
-                icon = 'zap'; 
+                signal = 'BUY'; icon = 'zap'; 
                 strategy = 'MACD Crossover (Momentum) + Golden Cross (Trend) confirmed.';
                 advice = 'High probability entry. Momentum shift aligned with underlying uptrend.';
                 strength = ' (High Conviction)';
             } 
-            // --- High Conviction SELL Signal ---
             else if (isMacdBearish && isDeathCross && isRSIHealthyForSell) {
-                signal = 'SELL';
-                icon = 'alert-triangle'; 
+                signal = 'SELL'; icon = 'alert-triangle'; 
                 strategy = 'MACD Crossover (Momentum) + Death Cross (Trend) confirmed.';
                 advice = 'High probability exit/short. Momentum shift aligned with underlying downtrend.';
                 strength = ' (High Conviction)';
             }
-            // --- Mid Conviction BUY Signal (Momentum shift, but trend is still bearish) ---
-            else if (isMacdBullish && isRSIHealthyForBuy && (isOversold || !isGoldenCross)) {
-                signal = 'HOLD'; // Downgrade to HOLD for safety due to opposing trend or oversold bounce risk
-                icon = 'trending-up';
-                strategy = 'MACD Bullish Crossover (Momentum). Weak trend bias or Oversold bounce.';
+            else if (isMacdBullish && isRSIHealthyForBuy) {
+                signal = 'HOLD'; icon = 'trending-up';
+                strategy = 'MACD Bullish Crossover (Momentum). Weak trend bias.';
                 advice = 'Cautious mid-term buying opportunity. Wait for trend confirmation (Golden Cross).';
                 strength = ' (Mid Conviction)';
             }
-            // --- Mid Conviction SELL Signal (Momentum shift, but trend is still bullish) ---
-            else if (isMacdBearish && isRSIHealthyForSell && (isOverbought || !isDeathCross)) {
-                signal = 'HOLD'; // Downgrade to HOLD for safety due to opposing trend or overbought reversal risk
-                icon = 'trending-down';
-                strategy = 'MACD Bearish Crossover (Momentum). Weak trend bias or Overbought correction.';
+            else if (isMacdBearish && isRSIHealthyForSell) {
+                signal = 'HOLD'; icon = 'trending-down';
+                strategy = 'MACD Bearish Crossover (Momentum). Weak trend bias.';
                 advice = 'Cautious mid-term selling opportunity. Wait for trend confirmation (Death Cross).';
                 strength = ' (Mid Conviction)';
             }
-            // --- Default HOLD (Chop/Consolidation/Risk) ---
             else {
-                signal = 'HOLD';
-                icon = 'pause';
-                strategy = `RSI: ${rsi.toFixed(2)}. Market consolidation or high risk (e.g., Overbought/Oversold).`;
+                signal = 'HOLD'; icon = 'pause';
+                strategy = `RSI: ${rsi.toFixed(2)}. Market consolidation or high risk.`;
                 advice = 'Stay on the sidelines. Low confidence in signals.';
             }
 
-            
-            // Set Long-Term Advice based on Slow EMA
             const longTermAdvice = closingPrices[closingPrices.length - 1] > ema26 ? 
                                    'Long-term bias is bullish (Price > EMA 26).' : 
                                    'Long-term bias is bearish or neutral (Price < EMA 26).';
@@ -471,15 +432,11 @@
             const ctx = document.getElementById(`chart-${symbol}`);
             if (!ctx) return;
             
-            // Destroy previous chart instance if it exists
             if (charts[symbol]) {
                 charts[symbol].destroy();
             }
 
-            // Create labels for the x-axis (using the kline index, since timestamps are complex)
             const labels = klines.map((_, index) => index);
-            
-            // Convert closing prices to AED for the chart
             const chartData = closingPrices.map(priceUSD => priceUSD * AED_RATE);
             const sma12ChartData = sma12Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
             const sma26ChartData = sma26Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
@@ -535,19 +492,17 @@
                         x: { display: false },
                         y: { 
                             display: false,
-                            // Ensure the Y axis scales nicely based on price data
                             beginAtZero: false,
                             suggestedMin: Math.min(...chartData.filter(v => !isNaN(v))) * 0.99,
                             suggestedMax: Math.max(...chartData.filter(v => !isNaN(v))) * 1.01,
-                            grid: { color: 'rgba(71, 85, 105, 0.3)' } // Dark grid lines
+                            grid: { color: 'rgba(71, 85, 105, 0.3)' }
                         }
                     }
                 }
             });
         }
 
-        // --- DATA FETCHING & RENDERING ---
-
+        // --- DATA FETCHING & RENDERING (MAIN LOOP) ---
         async function fetchRealTimeData() {
             console.log("Fetching market data...");
             marketDataContainer.innerHTML = '<p class="col-span-full text-center text-slate-400 py-4">Updating...</p>';
@@ -555,17 +510,14 @@
             const symbols = CRYPTO_SYMBOLS.map(s => s + 'USDT');
             
             try {
-                // 1. Fetch 24hr Ticker Data (for current price and % change)
                 const tickerUrl = `${BINANCE_BASE_URL}/ticker/24hr?symbols=["${symbols.join('","')}"]`;
                 const tickerData = await fetchWithRetry(tickerUrl);
 
-                // 2. Fetch Kline Data for all symbols (for MA/RSI/MACD calculation and Charting) 
                 const klinePromises = symbols.map(symbol => {
-                    // *** interval=5m ***
                     const klineUrl = `${BINANCE_BASE_URL}/klines?symbol=${symbol}&interval=5m&limit=40`;
                     return fetchWithRetry(klineUrl).catch(e => {
                         console.error(`Failed to fetch klines for ${symbol}:`, e);
-                        return []; // Return empty array on failure
+                        return [];
                     });
                 });
                 const klinesResults = await Promise.all(klinePromises);
@@ -601,7 +553,6 @@
                     const defaultThesisText = 'Click to set your plan (e.g., Short-term target: 100 AED, Long-term HODL).';
                     const savedThesis = userTheses[symbol] || defaultThesisText;
 
-                    // Determine if thesis editing should be allowed
                     const isOwner = userId === OWNER_ID;
                     const contentEditable = isOwner ? 'true' : 'false';
                     const focusRingClass = isOwner ? 'focus:ring-fuchsia-500' : '';
@@ -653,11 +604,9 @@
                     marketDataContainer.innerHTML += html;
                 });
                 
-                // Update global prices and re-render portfolio
                 livePrices = newPrices;
                 renderPortfolio();
 
-                // RENDER CHARTS
                 CRYPTO_SYMBOLS.forEach(symbol => {
                     const klines = klineMap.get(symbol);
                     if (klines && klines.length > 0) {
@@ -665,10 +614,7 @@
                     }
                 });
                 
-                // Re-render lucide icons
                 window.lucide.createIcons();
-
-                // Check owner status after rendering
                 checkOwnerAccess();
                 
             } catch (error) {
@@ -677,16 +623,16 @@
             }
         }
 
+        // --- PORTFOLIO & UI RENDERING ---
+
         function renderPortfolio() {
             if (!isAuthReady) return;
 
-            // Check ownership status for displaying delete buttons
             const isOwner = userId === OWNER_ID;
-
             let totalInvestedAED = 0;
             let totalValueAED = 0;
 
-            holdingsList.innerHTML = ''; // Clear existing list
+            holdingsList.innerHTML = ''; 
 
             if (investments.length === 0) {
                 holdingsList.innerHTML = '<p class="text-center text-slate-400 py-4">No investments added yet.</p>';
@@ -704,9 +650,8 @@
 
                 const pnlClass = pnl > 0 ? 'status-profit' : pnl < 0 ? 'status-loss' : 'status-zero';
                 
-                // --- SL/TP Logic and Alert ---
                 let alertHtml = '';
-                let holdingClasses = "border-slate-700 bg-slate-800"; // Default dark mode background
+                let holdingClasses = "border-slate-700 bg-slate-800";
 
                 const tpPrice = item.takeProfitAED;
                 const slPrice = item.stopLossAED;
@@ -718,7 +663,6 @@
                     alertHtml = `<p class="alert-sl text-xs font-semibold p-1 rounded-md mt-1 flex items-center"><i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i> STOP LOSS HIT: ${slPrice.toFixed(2)} AED</p>`;
                     holdingClasses = "alert-sl border-red-500 bg-red-900/40";
                 } else if (tpPrice && livePriceAED > slPrice) {
-                    // Check if price is within 5% of TP or SL (excluding the hit scenario above)
                     const proximityPercent = 0.05; 
                     if (tpPrice > 0 && livePriceAED >= tpPrice * (1 - proximityPercent)) {
                         alertHtml = `<p class="alert-tp text-xs font-semibold p-1 rounded-md mt-1">Approaching TP: ${tpPrice.toFixed(2)} AED</p>`;
@@ -726,9 +670,7 @@
                         alertHtml = `<p class="alert-sl text-xs font-semibold p-1 rounded-md mt-1">Approaching SL: ${slPrice.toFixed(2)} AED</p>`;
                     }
                 }
-                // --- End SL/TP Logic ---
 
-                // Only show delete button if current user is the owner
                 const deleteButtonHtml = isOwner ? `
                     <button onclick="window.removeInvestment('${item.id}')" class="mt-2 p-1 text-red-400 hover:text-red-300 rounded-full transition duration-150">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -758,7 +700,6 @@
                 holdingsList.innerHTML += holdingHtml;
             });
 
-            // Update Summary
             const overallPNLValue = totalValueAED - totalInvestedAED;
             const overallPNLPercent = totalInvestedAED > 0 ? (overallPNLValue / totalInvestedAED) * 100 : 0;
             const overallPNLClass = overallPNLValue > 0 ? 'status-profit' : overallPNLValue < 0 ? 'status-loss' : 'status-zero';
@@ -779,7 +720,6 @@
                 console.error("Firebase not initialized.");
                 return null;
             }
-            // Correct Path: Collection/Document/Collection
             return firebase.collection(db, `artifacts/${appId}/portfolio_entries`);
         }
 
@@ -789,7 +729,6 @@
                 console.error("Firebase not initialized for preferences.");
                 return null;
             }
-            // Correct Path: Collection/Document/Collection/Document
             return firebase.doc(db, `artifacts/${appId}/config/thesis_data`);
         }
 
@@ -801,9 +740,6 @@
                 const docSnap = await firebase.getDoc(docRef);
                 if (docSnap.exists()) {
                     userTheses = docSnap.data().theses || {};
-                    console.log("User theses loaded:", userTheses);
-                } else {
-                    console.log("No existing user theses found.");
                 }
             } catch (e) {
                 console.error("Error loading user theses:", e);
@@ -811,28 +747,24 @@
         }
 
         async function saveThesis(element) {
-            // Write only allowed if current user is the owner
             if (!isAuthReady || userId !== OWNER_ID) return;
 
             const symbol = element.getAttribute('data-symbol');
             const defaultText = element.getAttribute('data-default-text');
             const content = element.textContent.trim() || defaultText;
             
-            // Update local map
             userTheses[symbol] = content;
 
             const docRef = await getThesisDocRef();
             if (!docRef) return;
 
             try {
-                // Use setDoc with merge: true to avoid overwriting other data if the document exists
                 await firebase.setDoc(docRef, { theses: userTheses }, { merge: true });
-                console.log(`Thesis for ${symbol} saved.`);
             } catch (e) {
                 console.error("Error saving thesis:", e);
             }
         }
-        window.saveThesis = saveThesis; // Expose globally for inline edit
+        window.saveThesis = saveThesis; 
 
         function setupFirestoreListener() {
             const portfolioRef = getCollectionRef();
@@ -840,7 +772,6 @@
 
             const q = firebase.query(portfolioRef);
             
-            // Listen for real-time updates
             firebase.onSnapshot(q, (snapshot) => {
                 const newInvestments = [];
                 snapshot.forEach((doc) => {
@@ -850,7 +781,6 @@
                     });
                 });
                 investments = newInvestments;
-                console.log("Portfolio updated:", investments);
                 renderPortfolio();
             }, (error) => {
                 console.error("Firestore listen error:", error);
@@ -858,72 +788,64 @@
         }
         
         async function addInvestment(data) {
-            // Write only allowed if current user is the owner
             if (userId !== OWNER_ID) return;
 
+            const currentFormStatusEl = document.getElementById('form-status');
             const portfolioRef = getCollectionRef();
             if (!portfolioRef) {
-                formStatusEl.textContent = "Error: Authentication not complete.";
-                formStatusEl.className = "text-red-400 text-sm mt-2";
+                currentFormStatusEl.textContent = "Error: Authentication not complete.";
+                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
                 return;
             }
 
             try {
                 await firebase.addDoc(portfolioRef, data);
-                formStatusEl.textContent = "Investment added successfully!";
-                formStatusEl.className = "text-emerald-400 text-sm mt-2";
-                investmentForm.reset();
+                currentFormStatusEl.textContent = "Investment added successfully!";
+                currentFormStatusEl.className = "text-emerald-400 text-sm mt-2";
+                document.getElementById('investment-form').reset();
             } catch (e) {
                 console.error("Error adding document: ", e);
-                formStatusEl.textContent = "Error saving investment. Check console for details.";
-                formStatusEl.className = "text-red-400 text-sm mt-2";
+                currentFormStatusEl.textContent = "Error saving investment. Check console for details.";
+                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
             }
         }
 
         async function removeInvestment(id) {
-            // Write only allowed if current user is the owner
             if (userId !== OWNER_ID) return;
 
             const docRef = firebase.doc(getCollectionRef(), id);
             
             if (!docRef) return;
 
-            // Use a custom confirmation modal if this were a production app, but for simplicity in this single-file app:
             if (!window.confirm("Are you sure you want to remove this investment?")) {
                 return;
             }
 
             try {
-                // Correct Path: Collection/Document/Collection/Document
                 await firebase.deleteDoc(docRef);
-                console.log("Investment removed:", id);
-                // The onSnapshot listener will automatically update the UI
             } catch (e) {
                 console.error("Error removing document: ", e);
             }
         }
-        window.removeInvestment = removeInvestment; // Make available globally for inline button click
+        window.removeInvestment = removeInvestment; 
         
         // --- AUTHENTICATION AND ACCESS CONTROL LOGIC ---
         
         function showOwnerLogin() {
-            // Show the login modal
             loginModal.classList.remove('hidden');
         }
 
         function hideOwnerLogin() {
-            // Hide the login modal
             loginModal.classList.add('hidden');
-            // If hiding after a failed attempt, switch to the read-only view
             checkOwnerAccess();
         }
 
         function checkOwnerAccess() {
             const isOwner = userId === OWNER_ID;
-
+            const currentInvestmentCard = document.getElementById('investment-card');
+            
             if (isOwner) {
-                // Show the full form for the owner
-                investmentCard.innerHTML = `
+                currentInvestmentCard.innerHTML = `
                     <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
                         <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
                         Add Investment
@@ -972,8 +894,8 @@
                 window.lucide.createIcons();
                 
             } else {
-                // Show the restricted view for guests/mobile (until they sign in)
-                investmentCard.innerHTML = `
+                // Guest view: Show the sign-in button
+                currentInvestmentCard.innerHTML = `
                     <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
                         <i data-lucide="lock" class="mr-2 text-red-500"></i> Write Access Restricted
                     </h2>
@@ -1000,14 +922,14 @@
             loginErrorMsg.classList.add('hidden');
             
             try {
-                // This call attempts to sign in with the email/password
+                // This attempts to sign in with the email/password
                 const userCredential = await firebase.signInWithEmailAndPassword(auth, email, password);
                 
                 if (userCredential.user.uid === OWNER_ID) {
                     // Success! The mobile session now has the correct, permanent UID.
                     hideOwnerLogin();
                 } else {
-                    // Logged in, but with the wrong UID (shouldn't happen if user follows instructions)
+                    // This block should ideally never be reached now
                     await firebase.auth.signOut(auth);
                     loginErrorMsg.textContent = "Sign-in successful, but credentials do not match the tracker's Owner ID.";
                     loginErrorMsg.classList.remove('hidden');
