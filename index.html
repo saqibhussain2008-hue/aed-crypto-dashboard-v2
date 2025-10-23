@@ -54,19 +54,48 @@
     <!-- Firebase Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Expose Firebase objects globally for use in the main script block
         window.firebase = {
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+            initializeApp, getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged,
             getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField,
             setLogLevel
         };
     </script>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
+    
+    <!-- Owner Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+        <div class="card p-6 w-full max-w-sm">
+            <h2 class="text-2xl font-bold neon-accent mb-4 flex items-center">
+                <i data-lucide="key" class="mr-2"></i> Owner Sign In
+            </h2>
+            <p class="text-sm text-slate-400 mb-4">
+                You are currently viewing as a guest. To gain **write access**, please sign in with the Owner's Email and Password.
+            </p>
+            <p class="text-xs text-yellow-400 mb-4">
+                *Note: You must first create this Owner account in your Firebase Console: Authentication > Users.*
+            </p>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="owner-email" class="block text-sm font-medium text-slate-400">Email</label>
+                    <input type="email" id="owner-email" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="owner@yourdomain.com">
+                </div>
+                <div>
+                    <label for="owner-password" class="block text-sm font-medium text-slate-400">Password</label>
+                    <input type="password" id="owner-password" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="********">
+                </div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 transition duration-150">
+                    Sign In
+                </button>
+                <p id="login-error-message" class="text-center text-sm text-red-400 mt-2 hidden">Invalid credentials. Try again.</p>
+            </form>
+        </div>
+    </div>
 
     <header class="text-center mb-8">
         <h1 class="text-4xl font-extrabold text-slate-100 flex items-center justify-center">
@@ -126,48 +155,8 @@
 
             <!-- 2. Add Investment Form -->
             <div id="investment-card" class="card p-6">
-                <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
-                    <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
-                    Add Investment
-                </h2>
-                <form id="investment-form" class="space-y-4">
-                    <div>
-                        <label for="currency" class="block text-sm font-medium text-slate-400">Currency</label>
-                        <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-600 bg-slate-700 text-slate-200 focus:outline-none focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm rounded-md shadow-sm">
-                            <option value="">Select Coin</option>
-                            <option value="BTC">Bitcoin (BTC)</option>
-                            <option value="ETH">Ethereum (ETH)</option>
-                            <option value="CAKE">PancakeSwap (CAKE)</option>
-                            <option value="SOL">Solana (SOL)</option>
-                            <option value="BNB">Binance Coin (BNB)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="quantity" class="block text-sm font-medium text-slate-400">Quantity Purchased</label>
-                        <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5">
-                    </div>
-                    <div>
-                        <label for="price" class="block text-sm font-medium text-slate-400">Purchase Price (AED)</label>
-                        <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00">
-                    </div>
-
-                    <div class="border-t border-slate-700 pt-4 space-y-3">
-                        <p class="text-sm font-semibold text-slate-200">Risk Management (Optional)</p>
-                        <div>
-                            <label for="takeProfit" class="block text-xs font-medium text-slate-400">Take-Profit (TP) Price (AED)</label>
-                            <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00">
-                        </div>
-                        <div>
-                            <label for="stopLoss" class="block text-xs font-medium text-slate-400">Stop-Loss (SL) Price (AED)</label>
-                            <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00">
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
-                        Add Investment
-                    </button>
-                    <p id="form-status" class="text-center text-sm mt-2"></p>
-                </form>
+                <!-- Content will be replaced dynamically -->
+                <p class="text-slate-400 text-center p-4">Loading access controls...</p>
             </div>
         </section>
 
@@ -237,6 +226,9 @@
         const formStatusEl = document.getElementById('form-status');
         const investmentForm = document.getElementById('investment-form');
         const investmentCard = document.getElementById('investment-card');
+        const loginModal = document.getElementById('login-modal');
+        const loginForm = document.getElementById('login-form');
+        const loginErrorMsg = document.getElementById('login-error-message');
         
         // Utility for exponential backoff retry logic
         async function fetchWithRetry(url, options = {}, maxRetries = 3) {
@@ -676,10 +668,8 @@
                 // Re-render lucide icons
                 window.lucide.createIcons();
 
-                // Hide investment form if not owner
-                if (!userId || userId !== OWNER_ID) {
-                    investmentCard.innerHTML = '<p class="text-slate-400 text-center p-4">Portfolio management is restricted to the owner only.</p>';
-                }
+                // Check owner status after rendering
+                checkOwnerAccess();
                 
             } catch (error) {
                 console.error("Error fetching market data:", error);
@@ -913,43 +903,158 @@
             }
         }
         window.removeInvestment = removeInvestment; // Make available globally for inline button click
+        
+        // --- AUTHENTICATION AND ACCESS CONTROL LOGIC ---
+        
+        function showOwnerLogin() {
+            // Show the login modal
+            loginModal.classList.remove('hidden');
+        }
 
-        // --- EVENT LISTENERS ---
+        function hideOwnerLogin() {
+            // Hide the login modal
+            loginModal.classList.add('hidden');
+            // If hiding after a failed attempt, switch to the read-only view
+            checkOwnerAccess();
+        }
 
-        investmentForm.addEventListener('submit', (e) => {
+        function checkOwnerAccess() {
+            const isOwner = userId === OWNER_ID;
+
+            if (isOwner) {
+                // Show the full form for the owner
+                investmentCard.innerHTML = `
+                    <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
+                        Add Investment
+                    </h2>
+                    <form id="investment-form" class="space-y-4">
+                        <div>
+                            <label for="currency" class="block text-sm font-medium text-slate-400">Currency</label>
+                            <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-600 bg-slate-700 text-slate-200 focus:outline-none focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm rounded-md shadow-sm">
+                                <option value="">Select Coin</option>
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                                <option value="CAKE">PancakeSwap (CAKE)</option>
+                                <option value="SOL">Solana (SOL)</option>
+                                <option value="BNB">Binance Coin (BNB)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="quantity" class="block text-sm font-medium text-slate-400">Quantity Purchased</label>
+                            <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5">
+                        </div>
+                        <div>
+                            <label for="price" class="block text-sm font-medium text-slate-400">Purchase Price (AED)</label>
+                            <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00">
+                        </div>
+
+                        <div class="border-t border-slate-700 pt-4 space-y-3">
+                            <p class="text-sm font-semibold text-slate-200">Risk Management (Optional)</p>
+                            <div>
+                                <label for="takeProfit" class="block text-xs font-medium text-slate-400">Take-Profit (TP) Price (AED)</label>
+                                <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00">
+                            </div>
+                            <div>
+                                <label for="stopLoss" class="block text-xs font-medium text-slate-400">Stop-Loss (SL) Price (AED)</label>
+                                <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                            Add Investment
+                        </button>
+                        <p id="form-status" class="text-center text-sm mt-2"></p>
+                    </form>
+                `;
+                // Re-attach event listeners after re-injecting HTML
+                document.getElementById('investment-form').addEventListener('submit', handleInvestmentFormSubmit);
+                window.lucide.createIcons();
+                
+            } else {
+                // Show the restricted view for guests/mobile (until they sign in)
+                investmentCard.innerHTML = `
+                    <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="lock" class="mr-2 text-red-500"></i> Write Access Restricted
+                    </h2>
+                    <p class="text-slate-400 mb-4">
+                        To add or edit portfolio entries, please sign in using the owner credentials.
+                    </p>
+                    <button id="sign-in-button" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 transition duration-150">
+                        Sign In as Owner
+                    </button>
+                `;
+                document.getElementById('sign-in-button').addEventListener('click', showOwnerLogin);
+                window.lucide.createIcons();
+            }
+        }
+        
+        // --- EVENT HANDLERS ---
+        
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Double check owner status on submission
-            if (userId !== OWNER_ID) {
-                formStatusEl.textContent = "Write access denied. Only the owner can modify the portfolio.";
-                formStatusEl.className = "text-red-400 text-sm mt-2";
-                return;
-            }
+            const email = document.getElementById('owner-email').value;
+            const password = document.getElementById('owner-password').value;
             
-            formStatusEl.textContent = "";
-
+            loginErrorMsg.classList.add('hidden');
+            
+            try {
+                // This call attempts to sign in with the email/password
+                const userCredential = await firebase.signInWithEmailAndPassword(auth, email, password);
+                
+                if (userCredential.user.uid === OWNER_ID) {
+                    // Success! The mobile session now has the correct, permanent UID.
+                    hideOwnerLogin();
+                } else {
+                    // Logged in, but with the wrong UID (shouldn't happen if user follows instructions)
+                    await firebase.auth.signOut(auth);
+                    loginErrorMsg.textContent = "Sign-in successful, but credentials do not match the tracker's Owner ID.";
+                    loginErrorMsg.classList.remove('hidden');
+                }
+                
+            } catch (error) {
+                console.error("Login failed:", error);
+                loginErrorMsg.textContent = "Login failed: Invalid email or password.";
+                loginErrorMsg.classList.remove('hidden');
+            }
+        });
+        
+        // Use a wrapper function for the form submission logic
+        function handleInvestmentFormSubmit(e) {
+            e.preventDefault();
+            
+            // Re-get elements that were newly injected
             const currency = document.getElementById('currency').value;
             const quantity = parseFloat(document.getElementById('quantity').value);
             const price = parseFloat(document.getElementById('price').value);
-            // New inputs
             const takeProfit = document.getElementById('takeProfit').value;
             const stopLoss = document.getElementById('stopLoss').value;
+            const currentFormStatusEl = document.getElementById('form-status');
+
+            if (userId !== OWNER_ID) {
+                currentFormStatusEl.textContent = "Write access denied. Please sign in as owner.";
+                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+            
+            currentFormStatusEl.textContent = "";
 
             if (!currency || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
-                formStatusEl.textContent = "Please fill out all mandatory fields with valid positive numbers.";
-                formStatusEl.className = "text-red-400 text-sm mt-2";
+                currentFormStatusEl.textContent = "Please fill out all mandatory fields with valid positive numbers.";
+                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
                 return;
             }
 
-            // Validate TP/SL relationship (SL should be below TP and Buy Price, TP should be above Buy Price)
+            // Validation logic...
             if (takeProfit && parseFloat(takeProfit) <= price) {
-                formStatusEl.textContent = "Take-Profit should be higher than the Purchase Price.";
-                formStatusEl.className = "text-red-400 text-sm mt-2";
+                currentFormStatusEl.textContent = "Take-Profit should be higher than the Purchase Price.";
+                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
                 return;
             }
             if (stopLoss && parseFloat(stopLoss) >= price) {
-                formStatusEl.textContent = "Stop-Loss should be lower than the Purchase Price.";
-                formStatusEl.className = "text-red-400 text-sm mt-2";
+                currentFormStatusEl.textContent = "Stop-Loss should be lower than the Purchase Price.";
+                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
                 return;
             }
 
@@ -963,7 +1068,8 @@
                 timestamp: new Date().toISOString()
             };
             addInvestment(newInvestment);
-        });
+        }
+
         
         // --- INITIALIZATION ---
         
@@ -982,33 +1088,35 @@
                 db = firebase.getFirestore(app);
                 auth = firebase.getAuth(app);
                 
-                // 1. Authenticate user anonymously
-                await firebase.signInAnonymously(auth);
+                // 1. Check existing session, or authenticate user anonymously
+                if (!auth.currentUser) {
+                    await firebase.signInAnonymously(auth);
+                }
 
             } catch(error) {
                 console.error("Firebase Initialization or Authentication failed:", error);
-                // If initialization fails, prevent listeners from running
                 isAuthReady = true; 
                 return; 
             }
             
-            // 2. Set up Auth State Listener
+            // 2. Set up Auth State Listener (This runs immediately after step 1)
             firebase.onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
                     isAuthReady = true;
-                    // Log current user ID for easy setup/verification
                     console.log("Current User Authenticated. UID:", userId); 
                     
-                    // Load user preferences (thesis) before drawing the market cards
+                    // Load user preferences (thesis)
                     await loadTheses(); 
-                    // 3. Setup Portfolio Listener after auth is ready
+                    // 3. Setup Portfolio Listener
                     setupFirestoreListener();
                 } else {
                     userId = null;
                     isAuthReady = true; 
                     console.log("User logged out or unauthorized.");
                 }
+                // 4. Update the UI based on ownership status
+                checkOwnerAccess();
             });
         }
 
