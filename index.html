@@ -3,221 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saqib Hussain Crypto Tracker</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js](https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js)"></script>
+    <title>Saqib Hussain Crypto Tracker (Binance Data)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load Chart.js for Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap)');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        /* --- Light Mode Theme --- */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0F172A; /* Slate 900 - Deep background */
-            color: #E2E8F0; /* Slate 200 - Default text */
+            background-color: #F1F5F9; /* Slate 100 - Light background */
+            color: #1E293B; /* Slate 800 - Default text */
         }
         .card {
-            background-color: #1E293B; /* Slate 800 - Card background */
+            background-color: #FFFFFF; /* White - Card background */
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); /* Subtle Fuchsia Glow */
-            transition: transform 0.2s, background-color 0.2s;
+            border: 1px solid #E2E8F0; /* Slate 200 - Subtle border */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.04); /* Soft shadow */
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
         }
         .card:hover {
             transform: translateY(-2px);
-            background-color: #334155; /* Slate 700 on hover */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Slightly larger shadow on hover */
         }
-        /* Neon Accents (Fuchsia/Purple) */
+        /* Accent Color (Fuchsia - kept for consistency, adjust if needed) */
         .neon-accent { color: #A855F7; } /* Fuchsia 500 */
-        
-        /* Signal Colors */
+
+        /* Input Fields */
+        input[type="email"], input[type="password"], input[type="number"], select {
+             background-color: #F8FAFC; /* Slate 50 */
+             border-color: #CBD5E1; /* Slate 300 */
+             color: #1E293B; /* Slate 800 */
+        }
+        input:focus, select:focus {
+             border-color: #A855F7; /* Fuchsia 500 */
+             --tw-ring-color: #A855F7; /* Fuchsia 500 ring */
+             --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+             --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+             box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+        }
+         label {
+             color: #475569; /* Slate 600 */
+         }
+
+        /* Signal Colors (Maintained contrast) */
         .signal-buy { background-color: #10b981; color: white; } /* Emerald 500 */
         .signal-sell { background-color: #ef4444; color: white; } /* Red 500 */
-        .signal-hold { background-color: #fbbf24; color: black; } /* Amber 400 */
-        
+        .signal-hold { background-color: #fbbf24; color: #1F2937; } /* Amber 400 with dark text */
+
         /* P/L Status */
-        .status-profit { color: #34D399; } /* Emerald 400 */
-        .status-loss { color: #F87171; } /* Red 400 */
-        .status-zero { color: #94A3B8; } /* Slate 400 */
-        
+        .status-profit { color: #10B981; } /* Emerald 500 */
+        .status-loss { color: #EF4444; } /* Red 500 */
+        .status-zero { color: #64748B; } /* Slate 500 */
+
         .icon-lg { width: 24px; height: 24px; }
-        .price-up { color: #34D399; }
-        .price-down { color: #F87171; }
+        .price-up { color: #10B981; } /* Emerald 500 */
+        .price-down { color: #EF4444; } /* Red 500 */
         /* MACD Histogram colors */
-        .macd-hist-up { color: #34D399; }
-        .macd-hist-down { color: #F87171; }
-        
-        /* SL/TP Alerts - Adjusted for dark mode contrast */
-        .alert-sl { background-color: #450A0A; border: 1px solid #B91C1C; color: #FCA5A5; } /* Dark Red */
-        .alert-tp { background-color: #064E3B; border: 1px solid #10B981; color: #A7F3D0; } /* Dark Green */
-        
-        /* Rebalance Suggestions */
-        .rebalance-buy { background-color: #064E3B; border: 1px solid #10B981; color: #A7F3D0; }
-        .rebalance-sell { background-color: #450A0A; border: 1px solid #B91C1C; color: #FCA5A5; }
+        .macd-hist-up { color: #10B981; }
+        .macd-hist-down { color: #EF4444; }
+
+        /* SL/TP Alerts - Adjusted for light mode contrast */
+        .alert-sl { background-color: #FEE2E2; border: 1px solid #F87171; color: #991B1B; } /* Light Red */
+        .alert-tp { background-color: #D1FAE5; border: 1px solid #34D399; color: #065F46; } /* Light Green */
+
+        /* Rebalance Suggestions - Adjusted for light mode */
+        .rebalance-buy { background-color: #D1FAE5; border: 1px solid #34D399; color: #065F46; }
+        .rebalance-sell { background-color: #FEE2E2; border: 1px solid #F87171; color: #991B1B; }
+
+        /* General Text Colors */
+        h1, h2, h3, .text-slate-100 { color: #1E293B; } /* Slate 800 */
+        p, .text-slate-200 { color: #334155; } /* Slate 700 */
+        .text-slate-400 { color: #64748B; } /* Slate 500 */
+        .text-slate-500 { color: #64748B; } /* Slate 500 */
+        .text-slate-600 { color: #475569; } /* Slate 600 */
+
+        /* Specific Overrides */
+        #overall-pnl { /* Ensure this stands out */ }
+        #portfolio-summary > div { background-color: #F1F5F9; } /* Light background for summary boxes */
+        #holdings-list > div { background-color: #F8FAFC; border-color: #E2E8F0;} /* Lighter bg for holding items */
+        .indicator-details { border-top-color: #E2E8F0; } /* Lighter border */
+        #thesis-${symbol} { background-color: #F1F5F9; border: 1px solid #E2E8F0;} /* Thesis box style */
+        .border-slate-700 { border-color: #E2E8F0; } /* Update all dark borders */
+        .border-slate-600 { border-color: #CBD5E1; } /* Update medium borders */
+        /* Chart background container */
+        .h-24.w-full { background-color: #F8FAFC; border-color: #E2E8F0;}
+
+        /* Owner Login Modal Background */
+        #owner-login-modal { background-color: rgba(30, 41, 59, 0.75); } /* Keep overlay dark */
+        #owner-login-modal .card { background-color: #FFFFFF; } /* Modal card is white */
+
+        /* Disclaimer Background */
+        #disclaimer {
+             background-color: #FEF3C7; /* Amber 100 */
+             border-color: #FBBF24; /* Amber 400 */
+             color: #92400E; /* Amber 800 */
+        }
+        #disclaimer h3 {
+             color: #78350F; /* Amber 900 */
+        }
     </style>
+    <!-- Firebase Imports -->
     <script type="module">
-        import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js)";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js)";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField, Timestamp } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js)";
-        import { setLogLevel } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js)";
-        
-        // Expose Firebase objects globally for use in the main script block
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, deleteDoc, onSnapshot, collection, Timestamp, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         window.firebase = {
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword,
-            getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField, Timestamp,
-            setLogLevel
+            initializeApp, getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword,
+            getFirestore, doc, getDoc, addDoc, setDoc, deleteDoc, onSnapshot, collection, Timestamp, deleteField
         };
     </script>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
 
-    <div id="owner-login-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center">
-        <div class="card p-8 w-full max-w-md">
+    <!-- Owner Login Modal -->
+    <div id="owner-login-modal" class="fixed inset-0 z-50 hidden items-center justify-center"> <!-- Adjusted overlay color in style -->
+        <div class="card p-8 w-full max-w-md"> <!-- Card is now white -->
             <h3 class="text-2xl font-bold neon-accent mb-4">Owner Sign In Required</h3>
-            <p class="text-slate-400 mb-4">You are viewing as a guest. Please sign in with the owner credentials to manage the portfolio (add/edit/delete entries).</p>
+            <p class="text-slate-500 mb-4">You are viewing as a guest. Please sign in with the owner credentials to manage the portfolio (add/edit/delete entries).</p> <!-- Adjusted text color -->
             <form id="owner-login-form" class="space-y-4">
                 <div>
-                    <label for="owner-email" class="block text-sm font-medium text-slate-400">Email</label>
-                    <input type="email" id="owner-email" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="owner@example.com">
+                    <label for="owner-email" class="block text-sm font-medium">Email</label> <!-- Adjusted text color via general rule -->
+                    <input type="email" id="owner-email" required class="mt-1 block w-full rounded-md shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500"> <!-- Background/border set in style -->
                 </div>
                 <div>
-                    <label for="owner-password" class="block text-sm font-medium text-slate-400">Password</label>
-                    <input type="password" id="owner-password" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="••••••••">
+                    <label for="owner-password" class="block text-sm font-medium">Password</label> <!-- Adjusted text color via general rule -->
+                    <input type="password" id="owner-password" required class="mt-1 block w-full rounded-md shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500"> <!-- Background/border set in style -->
                 </div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 transition duration-150 ease-in-out"> <!-- Adjusted button color -->
                     Sign In as Owner
                 </button>
-                <p id="login-status-message" class="text-center text-sm mt-2 text-red-400"></p>
+                <p id="login-status-message" class="text-center text-sm mt-2 text-red-600"></p> <!-- Adjusted error text color -->
             </form>
         </div>
     </div>
 
-
     <header class="text-center mb-8">
-        <h1 class="text-4xl font-extrabold text-slate-100 flex items-center justify-center">
+        <h1 class="text-4xl font-extrabold flex items-center justify-center"> <!-- Color set via general rule -->
             <i data-lucide="line-chart" class="icon-lg mr-3 neon-accent"></i>
             Saqib Hussain Crypto Tracker
         </h1>
-        <p class="text-slate-400 mt-2">Real-time prices, **High-Conviction** signals, and portfolio tracker.</p>
+        <p class="mt-2">Real-time prices, **High-Conviction** signals, and portfolio tracker. (Data: Binance)</p> <!-- Color set via general rule -->
     </header>
 
+    <!-- Main Container -->
     <main class="max-w-7xl mx-auto space-y-8">
 
-        <div id="disclaimer" class="p-4 bg-yellow-900/40 border-l-4 border-yellow-500 text-yellow-300 rounded-md shadow-md">
-            <h3 class="font-bold text-lg mb-1">⚠️ Financial Disclaimer (5-Minute Interval)</h3>
-            <p class="text-sm">Signals are now based on **5-minute price data** for more stability. This dashboard is for **educational and simulation purposes only**; any real investment decisions are made at your own risk. Please use the "My Thesis & Plan" section to document your strategy.</p>
+        <!-- Disclaimer -->
+        <div id="disclaimer" class="p-4 border-l-4 rounded-md shadow-md"> <!-- Colors adjusted in style -->
+            <h3 class="font-bold text-lg mb-1"> (5-Minute Interval - Binance Data)</h3>
+            <p class="text-sm">Signals are based on 5-minute price data from Binance Spot (USDT pairs)**.</p>
         </div>
 
+        <!-- Real-Time Market Data -->
         <section class="card p-6">
-            <h2 class="text-2xl font-semibold text-slate-100 mb-4">Market Data & Signals (USDT/AED - 5 Min Interval)</h2>
-            <div id="market-data-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6 gap-4">
-                <p class="col-span-full text-center text-slate-400 py-4">Loading real-time data...</p>
+            <h2 class="text-2xl font-semibold mb-4">Market Data & Signals (USDT/AED - 5 Min Interval)</h2> <!-- Color set via general rule -->
+            <div id="market-data-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <!-- Initial Placeholder Cards -->
+                <div class="card p-4 border flex flex-col justify-center items-center" id="loading-placeholder"> <!-- Border adjusted in style -->
+                       <p class="text-center"> <!-- Color set via general rule -->
+                            <i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto mb-2"></i>
+                            Loading real-time data from Binance...
+                       </p>
+                </div>
+                 <!-- Market data cards will replace the placeholder -->
             </div>
         </section>
 
+        <!-- Portfolio Management and Tracking -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
+            <!-- 1. Portfolio Summary -->
             <div class="card p-6 lg:col-span-2">
-                <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                <h2 class="text-2xl font-semibold mb-4 flex items-center"> <!-- Color set via general rule -->
                     <i data-lucide="wallet" class="mr-2 neon-accent"></i>
                     My Portfolio Summary
                 </h2>
-                <div id="portfolio-summary" class="grid grid-cols-3 gap-4 border-b border-slate-700 pb-4 mb-4">
-                    <div class="p-3 bg-slate-700 rounded-lg">
-                        <p class="text-sm text-slate-400">Total Invested (AED)</p>
-                        <p id="total-invested-aed" class="text-xl font-bold text-slate-100">0.00</p>
+                <div id="portfolio-summary" class="grid grid-cols-3 gap-4 border-b pb-4 mb-4"> <!-- Background and border adjusted in style -->
+                    <div class="p-3 rounded-lg"> <!-- Background adjusted in style -->
+                        <p class="text-sm">Total Invested (AED)</p> <!-- Color set via general rule -->
+                        <p id="total-invested-aed" class="text-xl font-bold">0.00</p> <!-- Color set via general rule -->
                     </div>
-                    <div class="p-3 bg-slate-700 rounded-lg">
-                        <p class="text-sm text-slate-400">Total Value (AED)</p>
-                        <p id="total-value-aed" class="text-xl font-bold text-slate-100">0.00</p>
+                    <div class="p-3 rounded-lg"> <!-- Background adjusted in style -->
+                        <p class="text-sm">Total Value (AED)</p> <!-- Color set via general rule -->
+                        <p id="total-value-aed" class="text-xl font-bold">0.00</p> <!-- Color set via general rule -->
                     </div>
-                    <div class="p-3 bg-slate-700 rounded-lg">
-                        <p class="text-sm text-slate-400">Total Value (USD)</p>
-                        <p id="total-value-usd" class="text-xl font-bold text-slate-100">0.00</p>
+                    <div class="p-3 rounded-lg"> <!-- Background adjusted in style -->
+                        <p class="text-sm">Total Value (USD)</p> <!-- Color set via general rule -->
+                        <p id="total-value-usd" class="text-xl font-bold">0.00</p> <!-- Color set via general rule -->
                     </div>
                 </div>
                 <div class="mb-4">
-                    <p class="text-sm text-slate-400">Overall Profit / Loss (AED)</p>
+                    <p class="text-sm">Overall Profit / Loss (AED)</p> <!-- Color set via general rule -->
                     <p id="overall-pnl" class="text-3xl font-extrabold status-zero">0.00 (0.00%)</p>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-slate-700">
-                    <h3 class="text-xl font-medium text-slate-100 mb-3 flex items-center">
+                <!-- Rebalancing Section -->
+                <div class="mt-6 pt-4 border-t"> <!-- Border adjusted in style -->
+                    <h3 class="text-xl font-medium mb-3 flex items-center"> <!-- Color set via general rule -->
                         <i data-lucide="scale" class="w-5 h-5 mr-2 neon-accent"></i>
                         Rebalancing Recommendations
                     </h3>
                     <div id="rebalance-suggestions" class="space-y-2">
-                         <p class="text-center text-slate-400 py-2 text-sm">Waiting for portfolio data to calculate targets...</p>
+                         <p class="text-center py-2 text-sm">Waiting for portfolio data to calculate targets...</p> <!-- Color set via general rule -->
                     </div>
                 </div>
-                
-                <h3 class="text-xl font-medium text-slate-100 mb-3 border-t border-slate-700 pt-4 mt-6">Current Holdings</h3>
+
+                <h3 class="text-xl font-medium mb-3 border-t pt-4 mt-6">Current Holdings</h3> <!-- Color & Border adjusted -->
                 <div id="holdings-list" class="space-y-2">
-                    <p class="text-center text-slate-400 py-4">No investments added yet.</p>
+                    <p class="text-center py-4">No investments added yet.</p> <!-- Color set via general rule -->
                 </div>
             </div>
 
+            <!-- 2. Add Investment Form -->
             <div id="investment-card" class="card p-6">
-                <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                <h2 class="text-2xl font-semibold mb-4 flex items-center"> <!-- Color set via general rule -->
                     <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
                     Add Investment
                 </h2>
+                <!-- Owner Login Message / Form (Owner only) -->
                 <div id="owner-access-message" class="space-y-4">
-                    <p class="text-center text-sm text-red-400">
+                    <p class="text-center text-sm text-red-600"> <!-- Adjusted error text color -->
                         Portfolio management is restricted.
                     </p>
-                    <button id="sign-in-owner" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                     <button id="sign-in-owner" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 transition duration-150 ease-in-out"> <!-- Adjusted button color -->
                         Sign In as Owner
                     </button>
                 </div>
-                
+
                 <form id="investment-form" class="space-y-4 hidden">
-                    <div>
-                        <label for="currency" class="block text-sm font-medium text-slate-400">Currency</label>
-                        <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-600 bg-slate-700 text-slate-200 focus:outline-none focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm rounded-md shadow-sm">
+                     <div>
+                        <label for="currency" class="block text-sm font-medium">Currency</label> <!-- Adjusted text color -->
+                        <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base sm:text-sm rounded-md shadow-sm"> <!-- Background/border set in style -->
                             <option value="">Select Coin</option>
                             <option value="BTC">Bitcoin (BTC)</option>
                             <option value="ETH">Ethereum (ETH)</option>
                             <option value="CAKE">PancakeSwap (CAKE)</option>
                             <option value="SOL">Solana (SOL)</option>
                             <option value="BNB">Binance Coin (BNB)</option>
-                            <option value="APRB">APRIORIO (APRB)</option>
                         </select>
                     </div>
                     <div>
-                        <label for="quantity" class="block text-sm font-medium text-slate-400">Quantity Purchased</label>
-                        <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5">
+                        <label for="quantity" class="block text-sm font-medium">Quantity Purchased</label> <!-- Adjusted text color -->
+                        <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5"> <!-- Background/border set in style -->
                     </div>
                     <div>
-                        <label for="price" class="block text-sm font-medium text-slate-400">Purchase Price (AED)</label>
-                        <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00">
+                        <label for="price" class="block text-sm font-medium">Purchase Price (AED)</label> <!-- Adjusted text color -->
+                        <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00"> <!-- Background/border set in style -->
                     </div>
 
-                    <div class="border-t border-slate-700 pt-4 space-y-3">
-                        <p class="text-sm font-semibold text-slate-200">Risk Management (Optional)</p>
+                    <div class="border-t pt-4 space-y-3"> <!-- Border adjusted in style -->
+                        <p class="text-sm font-semibold">Risk Management (Optional)</p> <!-- Adjusted text color -->
                         <div>
-                            <label for="takeProfit" class="block text-xs font-medium text-slate-400">Take-Profit (TP) Price (AED)</label>
-                            <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00">
+                            <label for="takeProfit" class="block text-xs font-medium">Take-Profit (TP) Price (AED)</label> <!-- Adjusted text color -->
+                            <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00"> <!-- Background/border set in style -->
                         </div>
                         <div>
-                            <label for="stopLoss" class="block text-xs font-medium text-slate-400">Stop-Loss (SL) Price (AED)</label>
-                            <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00">
+                            <label for="stopLoss" class="block text-xs font-medium">Stop-Loss (SL) Price (AED)</label> <!-- Adjusted text color -->
+                            <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00"> <!-- Background/border set in style -->
                         </div>
                     </div>
-                    
-                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+
+                     <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 transition duration-150 ease-in-out"> <!-- Adjusted button color -->
                         Add Investment
                     </button>
-                    <p id="form-status" class="text-center text-sm mt-2"></p>
+                    <p id="form-status" class="text-center text-sm mt-2"></p> <!-- Status color will be set dynamically -->
                 </form>
             </div>
         </section>
 
     </main>
-    
-    <footer class="mt-12 text-center text-slate-600 text-sm">
-        <p>Data provided by Binance Data API. Currency conversion based on fixed 1 USDT = 3.6725 AED rate. Signals are for educational purposes.</p>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-sm"> <!-- Color adjusted in style -->
+        <p>Data provided by Binance Spot API. Currency conversion based on fixed 1 USD = 3.6725 AED rate. Signals are for educational purposes.</p>
     </footer>
 
     <script type="module">
-        // --- 1. CONFIGURATION FOR GITHUB PAGES (REQUIRED FIX) ---
+        // --- 1. CONFIGURATION ---
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAI3Pl5vgTJmeAC7cZFcBH2DAmkDWuBjEc",
             authDomain: "crypto-dashboard-58a99.firebaseapp.com",
@@ -227,856 +297,206 @@
             appId: "1:1033795648349:web:c965ff343a06a2cee3c6b4",
             measurementId: "G-QS72PY0FND"
         };
-        // --- 2. OWNER CONFIGURATION ---
-        const OWNER_ID = 'OpICNqYsGaMNcRwQ6L3C9fx5wXz1'; 
+        const OWNER_ID = 'OpICNqYsGaMNcRwQ6L3C9fx5wXz1';
         // -------------------------------------------------------------
-        
-        // Configuration
+
+        // --- App Configuration ---
         const AED_RATE = 3.6725;
-        const CRYPTO_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB", "APRB"];
-        const BINANCE_BASE_URL = "[https://data-api.binance.vision/api/v3](https://data-api.binance.vision/api/v3)"; // Switched to data-api for reliability
-        const UPDATE_INTERVAL_MS = 15000; // 15 seconds update frequency (for UI update)
-        const REBALANCE_THRESHOLD_PERCENT = 10; // Rebalance if weight drifts +/- 10%
+        const BASE_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB"];
+        const BINANCE_API_BASE_URL = "https://api.binance.com";
+        const UPDATE_INTERVAL_MS = 15000;
+        const REBALANCE_THRESHOLD_PERCENT = 10;
+        const KLINE_INTERVAL = "5m";
+        const KLINE_LIMIT = 40;
 
-        // Store Chart instances globally to destroy/re-render
+        // --- Global State ---
         let charts = {};
-
-        // --- Firebase State Variables (Top of Scope) ---
         let db, auth, userId = null;
         let isAuthReady = false;
         let livePrices = {};
         let investments = [];
         let userTheses = {};
-        let signalData = {}; // Stores the latest signal (Buy/Sell/Hold) for rebalancing logic
-        
-        const firebaseConfig = FIREBASE_CONFIG; 
+        let signalData = {};
+        const firebaseConfig = FIREBASE_CONFIG;
+        const DOM = {};
 
+        function getBinanceSymbol(baseSymbol) { return `${baseSymbol}USDT`; }
 
-        // UI elements
-        const marketDataContainer = document.getElementById('market-data-container');
-        const holdingsList = document.getElementById('holdings-list');
-        const overallPnlEl = document.getElementById('overall-pnl');
-        const totalInvestedAedEl = document.getElementById('total-invested-aed');
-        const totalValueAedEl = document.getElementById('total-value-aed');
-        const totalValueUsdEl = document.getElementById('total-value-usd');
-        const formStatusEl = document.getElementById('form-status');
-        const investmentForm = document.getElementById('investment-form');
-        const investmentCard = document.getElementById('investment-card');
-        const ownerAccessMessage = document.getElementById('owner-access-message');
-        const signInOwnerBtn = document.getElementById('sign-in-owner');
-        const ownerLoginModal = document.getElementById('owner-login-modal');
-        const ownerLoginForm = document.getElementById('owner-login-form');
-        const loginStatusMessage = document.getElementById('login-status-message');
-        const rebalanceSuggestionsEl = document.getElementById('rebalance-suggestions');
-        
-        // Utility for exponential backoff retry logic
-        async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+        // --- Utility Functions ---
+        async function fetchWithRetry(url, options = {}, maxRetries = 3, timeout = 8000) {
             for (let i = 0; i < maxRetries; i++) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                options.signal = controller.signal;
                 try {
-                    const response = await fetch(url, options);
+                    const response = await fetch(url, options); clearTimeout(timeoutId);
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        if (response.status === 429 || response.status === 418) {
+                            console.warn(`Binance rate limit hit (${response.status}). Retrying...`);
+                            const retryAfter = response.headers.get('Retry-After'); let delay = (Math.pow(2, i) + Math.random()) * 5000;
+                            if (retryAfter) { const rS = parseInt(retryAfter, 10); if (!isNaN(rS)) { delay = rS * 1000 + 500; console.log(`Retrying after ${rS}s.`); } }
+                            await new Promise(resolve => setTimeout(resolve, delay)); continue;
+                        } throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return await response.json();
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) { return await response.json(); }
+                    else { const textResponse = await response.text(); throw new Error(`Unexpected content type: ${contentType}. Response: ${textResponse}`); }
                 } catch (error) {
-                    console.error(`Attempt ${i + 1} failed: ${error.message}`); 
-                    if (i === maxRetries - 1) throw error; 
-                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                    clearTimeout(timeoutId); const errorType = error.name === 'AbortError' ? '(Timeout)' : '';
+                    const errorMessage = `Fetch attempt ${i + 1} for ${url.substring(0, 100)}... failed: ${error.message} ${errorType}`; console.error(errorMessage); // Shorten URL in log
+                    if (i === maxRetries - 1) throw error;
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000; await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
         }
+        function safeCreateIcons() { if (window.lucide && typeof window.lucide.createIcons === 'function') { try { window.lucide.createIcons(); } catch (e) { console.error("Error calling lucide.createIcons:", e); } } }
 
-        // --- Core Application Functions (Defined early for hoisting safety) ---
-        
-        function getClosingPrices(klines) {
-            return klines.map(kline => parseFloat(kline[4]));
-        }
+       // --- TECHNICAL ANALYSIS FUNCTIONS ---
+        function getClosingPrices(binanceKlines) { if (!Array.isArray(binanceKlines)) return []; return binanceKlines.map(kline => parseFloat(kline[4])); }
+        function calculateSMAHistory(prices, period) { const smaValues = []; if (!prices || prices.length < period) return { history: [], latest: NaN }; for (let i = 0; i < prices.length; i++) { if (i < period - 1) { smaValues.push(NaN); } else { const startIdx = Math.max(0, i - period + 1); const validSlice = prices.slice(startIdx, i + 1); if (validSlice.length === period) { const sum = validSlice.reduce((acc, val) => acc + (val || 0), 0); smaValues.push(sum / period); } else { smaValues.push(NaN); } } } return { history: smaValues, latest: smaValues[smaValues.length - 1] || NaN }; }
+        function calculateRSI(prices, period = 14) { if (!prices || prices.length < period + 1) return null; let changes = []; for (let i = 1; i < prices.length; i++) { if (typeof prices[i] === 'number' && typeof prices[i-1] === 'number') { changes.push(prices[i] - prices[i - 1]); } else { return null; } } if (changes.length < period) return null; let sumGain = 0; for (let i = 0; i < period; i++) { sumGain += Math.max(0, changes[i]); } let sumLoss = 0; for (let i = 0; i < period; i++) { sumLoss += Math.max(0, -changes[i]); } let avgGain = sumGain / period, avgLoss = sumLoss / period; for (let i = period; i < changes.length; i++) { avgGain = (avgGain * (period - 1) + Math.max(0, changes[i])) / period; avgLoss = (avgLoss * (period - 1) + Math.max(0, -changes[i])) / period; } if (avgLoss === 0) return 100; if (avgGain === 0) return 0; const RS = avgGain / avgLoss; const RSI = 100 - (100 / (1 + RS)); return isNaN(RSI) ? null : RSI; }
+        function calculateEMA(prices, period) { if (!prices || prices.length < period) return null; const initialPrices = prices.slice(0, period); if (initialPrices.some(p => typeof p !== 'number')) return null; const multiplier = 2 / (period + 1); let emaValue = initialPrices.reduce((sum, price) => sum + price, 0) / period; for (let i = period; i < prices.length; i++) { if (typeof prices[i] !== 'number') return null; emaValue = (prices[i] - emaValue) * multiplier + emaValue; } return isNaN(emaValue) ? null : emaValue; }
+        function calculateMACD(prices) { const fastPeriod = 12, slowPeriod = 26, signalPeriod = 9; if (!prices || prices.length < slowPeriod) return null; const fastEMASeries = [], slowEMASeries = []; let fastEma = calculateEMA(prices.slice(0, fastPeriod), fastPeriod); if (fastEma === null) return null; let slowEma = calculateEMA(prices.slice(0, slowPeriod), slowPeriod); if (slowEma === null) return null; const fastMultiplier = 2 / (fastPeriod + 1), slowMultiplier = 2 / (slowPeriod + 1); for (let i = 0; i < prices.length; i++) { if (typeof prices[i] !== 'number') return null; if (i >= fastPeriod -1) { fastEma = (i === fastPeriod - 1) ? calculateEMA(prices.slice(0, fastPeriod), fastPeriod) : (prices[i] - fastEma) * fastMultiplier + fastEma; fastEMASeries.push(fastEma); } else { fastEMASeries.push(NaN); } if (i >= slowPeriod - 1) { slowEma = (i === slowPeriod - 1) ? calculateEMA(prices.slice(0, slowPeriod), slowPeriod) : (prices[i] - slowEma) * slowMultiplier + slowEma; slowEMASeries.push(slowEma); } else { slowEMASeries.push(NaN); } } const macdLineHistory = []; for(let i = slowPeriod - 1; i < prices.length; i++){ if(!isNaN(fastEMASeries[i]) && !isNaN(slowEMASeries[i])){ macdLineHistory.push(fastEMASeries[i] - slowEMASeries[i]); } } if (macdLineHistory.length < signalPeriod) { return { macdLine: macdLineHistory.pop() || null, signalLine: null, histogram: null }; } const signalLine = calculateEMA(macdLineHistory, signalPeriod), latestMacdLine = macdLineHistory[macdLineHistory.length - 1]; if (signalLine === null || isNaN(latestMacdLine)) { return { macdLine: latestMacdLine, signalLine: null, histogram: null }; } const histogram = latestMacdLine - signalLine; if (isNaN(latestMacdLine) || isNaN(signalLine) || isNaN(histogram)) { return null; } return { macdLine: latestMacdLine, signalLine, histogram }; }
+        function generateSignal(price, closingPricesUSD) { if (!closingPricesUSD || closingPricesUSD.length < 26) { return { signal: 'HOLD', strategy: `Gathering data (${closingPricesUSD ? closingPricesUSD.length : 0}/26 needed).`, icon: 'loader-2', rsi: 'N/A', macd: 'N/A', signalLine: 'N/A', histogram: 'N/A' }; } const ema12 = calculateEMA(closingPricesUSD, 12), ema26 = calculateEMA(closingPricesUSD, 26), rsi = calculateRSI(closingPricesUSD, 14), macdData = calculateMACD(closingPricesUSD); let signal = 'HOLD', strategy = 'Waiting for confirmation.', icon = 'pause', strength = ''; if (rsi === null || ema12 === null || ema26 === null || macdData === null || macdData.signalLine === null) { return { signal: 'HOLD', strategy: 'Indicator calculation error.', icon: 'alert-circle', rsi: rsi?.toFixed(2) || 'Err', macd: 'Err', signalLine: 'Err', histogram: 'Err' }; } const isMacdBullish = macdData.macdLine > macdData.signalLine, isMacdBearish = macdData.macdLine < macdData.signalLine, isRSIHealthyForBuy = rsi < 65, isRSIHealthyForSell = rsi > 35, isGoldenCross = ema12 > ema26, isDeathCross = ema12 < ema26; if (isMacdBullish && isGoldenCross && isRSIHealthyForBuy) { signal = 'BUY'; icon = 'zap'; strategy = 'MACD & Golden Cross alignment.'; strength = ' (High Conviction)'; } else if (isMacdBearish && isDeathCross && isRSIHealthyForSell) { signal = 'SELL'; icon = 'alert-triangle'; strategy = 'MACD & Death Cross alignment.'; strength = ' (High Conviction)'; } else if (isMacdBullish && isGoldenCross) { signal = 'BUY'; icon = 'zap'; strategy = 'MACD Bullish (Trend Confirmed).'; strength = ' (Mid Conviction - RSI High)'; } else if (isMacdBearish && isDeathCross) { signal = 'SELL'; icon = 'alert-triangle'; strategy = 'MACD Bearish (Trend Confirmed).'; strength = ' (Mid Conviction - RSI Low)'; } else if (isMacdBullish) { signal = 'HOLD'; icon = 'trending-up'; strategy = 'MACD Bullish Crossover (Momentum shift).'; strength = ' (Monitor Trend)'; } else if (isMacdBearish) { signal = 'HOLD'; icon = 'trending-down'; strategy = 'MACD Bearish Crossover (Momentum shift).'; strength = ' (Monitor Trend)'; } else { signal = 'HOLD'; icon = 'pause'; strategy = 'Consolidation/Low Momentum.'; } return { signal, strategy: strategy + strength, icon, rsi: rsi.toFixed(2), macd: macdData.macdLine.toFixed(4), signalLine: macdData.signalLine.toFixed(4), histogram: macdData.histogram.toFixed(4) }; }
+        function renderChart(symbol, closingPricesUSD) { if (!closingPricesUSD || closingPricesUSD.length === 0) return; const minLengthForSMAs = 26; if (closingPricesUSD.length < minLengthForSMAs) return; const sma12Data = calculateSMAHistory(closingPricesUSD, 12), sma26Data = calculateSMAHistory(closingPricesUSD, 26); const ctx = document.getElementById(`chart-${symbol}`); if (!ctx) return; if (charts[symbol]) { charts[symbol].destroy(); } const labels = Array.from({length: closingPricesUSD.length}, (_, i) => i + 1); const chartData = closingPricesUSD.map(p => p * AED_RATE), sma12ChartData = sma12Data.history.map(p => isNaN(p) ? NaN : p * AED_RATE), sma26ChartData = sma26Data.history.map(p => isNaN(p) ? NaN : p * AED_RATE); const validStartIndex = sma26Data.history.findIndex(v => !isNaN(v)); const displayLabels = labels.slice(validStartIndex), displayChartData = chartData.slice(validStartIndex), displaySma12Data = sma12ChartData.slice(validStartIndex), displaySma26Data = sma26ChartData.slice(validStartIndex); charts[symbol] = new Chart(ctx, { type: 'line', data: { labels: displayLabels, datasets: [ { label: 'Price (AED)', data: displayChartData, borderColor: '#A855F7', backgroundColor: 'rgba(168, 85, 247, 0.1)', pointRadius: 0, borderWidth: 1.5, fill: false, tension: 0.1, yAxisID: 'y' }, { label: 'SMA 12', data: displaySma12Data, borderColor: '#34D399', pointRadius: 0, borderWidth: 1, fill: false, tension: 0.1, yAxisID: 'y' }, { label: 'SMA 26', data: displaySma26Data, borderColor: '#F87171', pointRadius: 0, borderWidth: 1, fill: false, tension: 0.1, yAxisID: 'y' } ] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { display: false }, y: { display: false, beginAtZero: false, suggestedMin: Math.min(...displayChartData.filter(v => !isNaN(v))) * 0.99, suggestedMax: Math.max(...displayChartData.filter(v => !isNaN(v))) * 1.01 } } } }); }
 
-        function calculateSMAHistory(prices, period) {
-            const smaValues = [];
-            for (let i = 0; i < prices.length; i++) {
-                if (i < period - 1) {
-                    smaValues.push(NaN); 
-                } else {
-                    let sum = 0;
-                    for (let j = 0; j < period; j++) {
-                        sum += prices[i - j];
-                    }
-                    smaValues.push(sum / period);
-                }
-            }
-            const latestSMA = smaValues[smaValues.length - 1];
-            return { history: smaValues, latest: latestSMA };
-        }
-
-        function calculateRSI(prices, period = 14) {
-            if (prices.length < period + 1) return null; 
-
-            let changes = [];
-            for (let i = 1; i < prices.length; i++) {
-                changes.push(prices[i] - prices[i - 1]);
-            }
-            
-            // Calculate initial average gain/loss over the first 'period'
-            let sumGain = 0;
-            let sumLoss = 0;
-            for (let i = 0; i < period; i++) {
-                sumGain += Math.max(0, changes[i]);
-                sumLoss += Math.max(0, -changes[i]);
-            }
-
-            let avgGain = sumGain / period;
-            let avgLoss = sumLoss / period;
-            
-            // Smoothed RSI calculation for the remaining data points
-            for (let i = period; i < changes.length; i++) {
-                avgGain = (avgGain * (period - 1) + Math.max(0, changes[i])) / period;
-                avgLoss = (avgLoss * (period - 1) + Math.max(0, -changes[i])) / period;
-            }
-
-            if (avgLoss === 0 && avgGain > 0) return 100;
-            if (avgGain === 0 && avgLoss === 0) return 50;
-
-            const RS = avgGain / avgLoss;
-            const RSI = 100 - (100 / (1 + RS));
-            return RSI;
-        }
-        
-        function calculateEMA(prices, period) {
-            if (prices.length < period) return null;
-            const multiplier = 2 / (period + 1);
-            
-            let emaValue = 0;
-            for (let i = 0; i < period; i++) {
-                emaValue += prices[i];
-            }
-            emaValue /= period;
-
-            for (let i = period; i < prices.length; i++) {
-                emaValue = (prices[i] - emaValue) * multiplier + emaValue;
-            }
-            return emaValue; 
-        }
-
-        function calculateMACD(prices) {
-            const fastPeriod = 12; 
-            const slowPeriod = 26; 
-            const signalPeriod = 9; 
-            
-            if (prices.length < slowPeriod) return null; 
-
-            let macdLineHistory = [];
-            let currentFastEMA = calculateEMA(prices.slice(0, slowPeriod), fastPeriod);
-            let currentSlowEMA = calculateEMA(prices.slice(0, slowPeriod), slowPeriod);
-            
-            if (currentFastEMA === null || currentSlowEMA === null) return null;
-
-            macdLineHistory.push(currentFastEMA - currentSlowEMA);
-
-            const fastMultiplier = 2 / (fastPeriod + 1);
-            const slowMultiplier = 2 / (slowPeriod + 1);
-
-            for (let i = slowPeriod; i < prices.length; i++) {
-                currentFastEMA = (prices[i] - currentFastEMA) * fastMultiplier + currentFastEMA;
-                currentSlowEMA = (prices[i] - currentSlowEMA) * slowMultiplier + currentSlowEMA;
-                macdLineHistory.push(currentFastEMA - currentSlowEMA);
-            }
-            
-            if (macdLineHistory.length < signalPeriod) {
-                 return { macdLine: macdLineHistory.pop() || null, signalLine: null, histogram: null };
-            }
-            
-            // Calculate Signal Line EMA
-            let signalLine = calculateEMA(macdLineHistory, signalPeriod);
-            
-            // Re-calculate the final signal line accurately using the full history
-            let finalSignalLine = 0;
-            for (let i = 0; i < signalPeriod; i++) {
-                finalSignalLine += macdLineHistory[i];
-            }
-            finalSignalLine /= signalPeriod;
-            
-            const signalMultiplier = 2 / (signalPeriod + 1);
-            for (let i = signalPeriod; i < macdLineHistory.length; i++) {
-                 finalSignalLine = (macdLineHistory[i] - finalSignalLine) * signalMultiplier + finalSignalLine;
-            }
-            signalLine = finalSignalLine;
-            
-            const latestMacdLine = macdLineHistory[macdLineHistory.length - 1];
-            const histogram = latestMacdLine - signalLine;
-
-            return { macdLine: latestMacdLine, signalLine, histogram };
-        }
-
-        function generateSignal(symbol, price, klines) {
-            const closingPrices = getClosingPrices(klines);
-            const ema12 = calculateEMA(closingPrices, 12);
-            const ema26 = calculateEMA(closingPrices, 26);
-            const rsi = calculateRSI(closingPrices, 14);
-            const macdData = calculateMACD(closingPrices);
-            
-            let signal = 'HOLD';
-            let strategy = 'Waiting for confirmation.';
-            let icon = 'pause';
-            let strength = '';
-
-            if (rsi === null || ema12 === null || ema26 === null || macdData.signalLine === null) { 
-                return { signal: 'HOLD', strategy: 'Gathering data.', icon: 'pause', rsi: 'N/A', macd: 'N/A', signalLine: 'N/A', histogram: 'N/A' };
-            }
-            
-            const isMacdBullish = macdData.macdLine > macdData.signalLine;
-            const isMacdBearish = macdData.macdLine < macdData.signalLine;
-            const isRSIHealthyForBuy = rsi < 65;
-            const isRSIHealthyForSell = rsi > 35;
-            const isGoldenCross = ema12 > ema26;
-            const isDeathCross = ema12 < ema26;
-
-            if (isMacdBullish && isGoldenCross && isRSIHealthyForBuy) {
-                signal = 'BUY';
-                icon = 'zap'; 
-                strategy = 'MACD & Golden Cross alignment.';
-                strength = ' (High Conviction)';
-            } else if (isMacdBearish && isDeathCross && isRSIHealthyForSell) {
-                signal = 'SELL';
-                icon = 'alert-triangle'; 
-                strategy = 'MACD & Death Cross alignment.';
-                strength = ' (High Conviction)';
-            } else if (isMacdBullish) {
-                signal = 'HOLD'; 
-                icon = 'trending-up';
-                strategy = 'MACD Bullish Crossover (Momentum shift).';
-                strength = ' (Mid Conviction)';
-            } else if (isMacdBearish) {
-                signal = 'HOLD'; 
-                icon = 'trending-down';
-                strategy = 'MACD Bearish Crossover (Momentum shift).';
-                strength = ' (Mid Conviction)';
-            } else {
-                signal = 'HOLD';
-                icon = 'pause';
-                strategy = 'Consolidation/Low Momentum.';
-            }
-
-            return { 
-                signal, 
-                strategy: strategy + strength, 
-                icon, 
-                rsi: rsi.toFixed(2),
-                macd: macdData.macdLine !== null ? macdData.macdLine.toFixed(4) : 'N/A',
-                signalLine: macdData.signalLine !== null ? macdData.signalLine.toFixed(4) : 'N/A',
-                histogram: macdData.histogram !== null ? macdData.histogram.toFixed(4) : 'N/A'
-            };
-        }
-        
-        function renderChart(symbol, klines) {
-            const closingPrices = getClosingPrices(klines);
-            const sma12Data = calculateSMAHistory(closingPrices, 12);
-            const sma26Data = calculateSMAHistory(closingPrices, 26);
-            
-            const ctx = document.getElementById(`chart-${symbol}`);
-            if (!ctx) return;
-            
-            if (charts[symbol]) {
-                charts[symbol].destroy();
-            }
-
-            const labels = klines.map((_, index) => index);
-            
-            const chartData = closingPrices.map(priceUSD => priceUSD * AED_RATE);
-            const sma12ChartData = sma12Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
-            const sma26ChartData = sma26Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
-
-            charts[symbol] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Price (AED)',
-                            data: chartData,
-                            borderColor: '#A855F7', // Fuchsia 500 Accent
-                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                            pointRadius: 0,
-                            borderWidth: 1.5,
-                            fill: false,
-                            tension: 0.1,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'SMA 12',
-                            data: sma12ChartData,
-                            borderColor: '#34D399', // Emerald 400 (Faster MA)
-                            pointRadius: 0,
-                            borderWidth: 1,
-                            fill: false,
-                            tension: 0.1,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'SMA 26',
-                            data: sma26ChartData,
-                            borderColor: '#F87171', // Red 400 (Slower MA)
-                            pointRadius: 0,
-                            borderWidth: 1,
-                            fill: false,
-                            tension: 0.1,
-                            yAxisID: 'y'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { 
-                            display: false,
-                            beginAtZero: false,
-                            suggestedMin: Math.min(...chartData.filter(v => !isNaN(v))) * 0.99,
-                            suggestedMax: Math.max(...chartData.filter(v => !isNaN(v))) * 1.01,
-                        }
-                    }
-                }
-            });
-        }
-        
-        function calculateRebalanceSuggestions(totalValueAED) {
-            const suggestions = [];
-            const investedCoins = investments.map(i => i.currency);
-            
-            // 1. Calculate current weights
-            const weights = {};
-            const totalInvestedWeight = investedCoins.length;
-            
-            if (totalInvestedWeight === 0 || totalValueAED === 0) {
-                rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-400 py-2 text-sm">No investments to analyze.</p>';
-                return;
-            }
-
-            // Calculate current value and total value for each coin
-            const currentCoinValues = {};
-            investedCoins.forEach(currency => {
-                currentCoinValues[currency] = 0;
-            });
-
-            investments.forEach(item => {
-                const livePriceAED = livePrices[item.currency] || 0;
-                currentCoinValues[item.currency] += item.quantity * livePriceAED;
-            });
-
-            // Calculate target and drift
-            const targetWeightPercent = 100 / totalInvestedWeight;
-            
-            for (const currency of investedCoins) {
-                const currentValue = currentCoinValues[currency];
-                const currentWeightPercent = (currentValue / totalValueAED) * 100;
-                const driftPercent = currentWeightPercent - targetWeightPercent;
-                const signal = signalData[currency] || 'HOLD';
-                
-                const driftThreshold = Math.abs(driftPercent) > REBALANCE_THRESHOLD_PERCENT;
-
-                if (driftThreshold) {
-                    let requiredChangeAED = 0;
-                    let action = 'HOLD';
-                    let reason = '';
-                    
-                    const targetValue = totalValueAED * (targetWeightPercent / 100);
-                    requiredChangeAED = Math.abs(currentValue - targetValue);
-                    
-                    if (driftPercent > 0) { // Overweight (Need to Sell)
-                        reason = `Overweight (${currentWeightPercent.toFixed(1)}% vs ${targetWeightPercent.toFixed(1)}% Target)`;
-                        if (signal === 'SELL') {
-                            action = 'SELL';
-                            reason += ' - Aligned with SELL signal.';
-                        } else if (signal === 'BUY') {
-                            action = 'HOLD';
-                            reason += ' - CONFLICT: Ignoring SELL (Momentum is BUY).';
-                        }
-                    } else if (driftPercent < 0) { // Underweight (Need to Buy)
-                        reason = `Underweight (${currentWeightPercent.toFixed(1)}% vs ${targetWeightPercent.toFixed(1)}% Target)`;
-                        if (signal === 'BUY') {
-                            action = 'BUY';
-                            reason += ' - Aligned with BUY signal.';
-                        } else if (signal === 'SELL') {
-                            action = 'HOLD';
-                            reason += ' - CONFLICT: Ignoring BUY (Momentum is SELL).';
-                        }
-                    }
-
-                    if (action !== 'HOLD') {
-                        suggestions.push({
-                            currency,
-                            action,
-                            amountAED: requiredChangeAED,
-                            reason
-                        });
-                    }
-                }
-            }
-
-            if (suggestions.length === 0) {
-                rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-400 py-2 text-sm">Portfolio is balanced or signals conflict.</p>';
-            } else {
-                rebalanceSuggestionsEl.innerHTML = suggestions.map(s => {
-                    const colorClass = s.action === 'BUY' ? 'rebalance-buy' : 'rebalance-sell';
-                    const icon = s.action === 'BUY' ? 'trending-up' : 'trending-down';
-                    return `
-                        <div class="p-3 rounded-lg ${colorClass} flex justify-between items-center text-sm font-medium">
-                            <span class="flex items-center">
-                                <i data-lucide="${icon}" class="w-4 h-4 mr-2"></i>
-                                ${s.action} ${s.amountAED.toFixed(2)} AED worth of ${s.currency}
-                            </span>
-                            <span class="text-xs text-slate-200 ml-2">(${s.reason})</span>
-                        </div>
-                    `;
-                }).join('');
-            }
-            window.lucide.createIcons();
-        }
-
+        // --- Data Fetching and Rendering ---
         async function fetchRealTimeData() {
-            console.log("Fetching market data...");
-            // Ensure container is cleared and populated only if fetching is successful
-            
-            const symbols = CRYPTO_SYMBOLS.map(s => s + 'USDT');
-            
+            if (!DOM.marketDataContainer) return;
+            const errorMsgElement = document.getElementById('fetch-error-msg');
+            if (errorMsgElement) errorMsgElement.remove();
+            const binanceSymbols = BASE_SYMBOLS.map(getBinanceSymbol);
             try {
-                // 1. Fetch 24hr Ticker Data (for current price and % change)
-                const tickerUrl = `${BINANCE_BASE_URL}/ticker/24hr?symbols=["${symbols.join('","')}"]`;
-                const tickerData = await fetchWithRetry(tickerUrl);
+                const symbolsParam = JSON.stringify(binanceSymbols);
+                const priceUrl = `${BINANCE_API_BASE_URL}/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsParam)}`;
+                const priceDataArray = await fetchWithRetry(priceUrl);
+                const priceDataMap = priceDataArray.reduce((map, item) => { map[item.symbol] = item; return map; }, {});
 
-                // 2. Fetch Kline Data for all symbols (for MA/RSI/MACD calculation and Charting) 
-                const klinePromises = symbols.map(symbol => {
-                    const klineUrl = `${BINANCE_BASE_URL}/klines?symbol=${symbol}&interval=5m&limit=40`;
-                    return fetchWithRetry(klineUrl).catch(e => {
-                        console.error(`Failed to fetch klines for ${symbol}:`, e);
-                        return []; // Return empty array on failure
-                    });
+                const historicalPromises = BASE_SYMBOLS.map(baseSymbol => {
+                    const binanceSymbol = getBinanceSymbol(baseSymbol);
+                    const klineUrl = `${BINANCE_API_BASE_URL}/api/v3/klines?symbol=${binanceSymbol}&interval=${KLINE_INTERVAL}&limit=${KLINE_LIMIT}`;
+                    return fetchWithRetry(klineUrl).catch(e => { console.error(`Kline fetch error for ${baseSymbol}:`, e.message); return []; });
                 });
-                const klinesResults = await Promise.all(klinePromises);
-                const klineMap = new Map();
-                symbols.forEach((symbol, index) => {
-                    klineMap.set(symbol.replace('USDT', ''), klinesResults[index]);
+                const historicalResults = await Promise.all(historicalPromises);
+
+                const newPrices = {}, newSignals = {};
+                const loadingPlaceholder = document.getElementById('loading-placeholder');
+                if (loadingPlaceholder) loadingPlaceholder.remove();
+
+                BASE_SYMBOLS.forEach((symbol, index) => {
+                     try {
+                          const binanceSymbol = getBinanceSymbol(symbol); const item = priceDataMap[binanceSymbol]; const historicalKlines = historicalResults[index];
+                          if (!item || !item.lastPrice || !historicalKlines || historicalKlines.length < 26) { throw new Error(`Incomplete/insufficient data`); } // Simplified error
+                          const currentPriceUSD = parseFloat(item.lastPrice); const priceChangePercent = parseFloat(item.priceChangePercent) || 0; const closingPricesUSD = getClosingPrices(historicalKlines); const currentPriceAED = currentPriceUSD * AED_RATE;
+                          newPrices[symbol] = currentPriceAED; let signalInfo = generateSignal(currentPriceUSD, closingPricesUSD); newSignals[symbol] = signalInfo.signal;
+                          const cardElementId = `market-card-${symbol}`; let card = document.getElementById(cardElementId);
+                          if (!card) { card = document.createElement('div'); card.id = cardElementId; card.className = "card p-4 border flex flex-col justify-between"; DOM.marketDataContainer.appendChild(card); card.innerHTML = ` <div class="flex items-center justify-between mb-3"><h3 class="text-xl font-bold">${symbol}</h3><div id="signal-${symbol}" class="px-3 py-1 text-xs font-semibold rounded-full shadow-md flex items-center"></div></div> <div class="flex flex-col mb-3"><p id="price-aed-${symbol}" class="text-2xl font-extrabold"></p><p id="price-usd-${symbol}" class="text-lg font-medium"></p><p id="change-percent-${symbol}" class="text-sm mt-1"></p></div> <div class="h-24 w-full mb-3 border rounded-md p-1"><canvas id="chart-${symbol}"></canvas></div> <div class="indicator-details space-y-1 text-sm pt-2 flex-grow border-t"></div> <div class="mt-2 pt-2 border-t"><p class="text-xs font-medium mb-1">My Thesis & Plan</p><div contenteditable="false" id="thesis-${symbol}" class="text-xs p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 focus:ring-fuchsia-500 transition-colors" data-symbol="${symbol}"></div></div> `; }
+                          updateMarketCardDetails(card, symbol, signalInfo, currentPriceAED, currentPriceUSD, priceChangePercent);
+                          renderChart(symbol, closingPricesUSD);
+                     } catch (coinError) {
+                          console.error(`Error processing ${symbol}:`, coinError.message); newPrices[symbol] = 0; newSignals[symbol] = 'HOLD';
+                          const cardElementId = `market-card-${symbol}`; let card = document.getElementById(cardElementId);
+                          if (!card) { card = document.createElement('div'); card.id = cardElementId; card.className = "card p-4 border flex flex-col justify-center items-center"; DOM.marketDataContainer.appendChild(card); }
+                          card.innerHTML = `<h3 class="text-xl font-bold">${symbol}</h3><p class="text-red-600 text-sm mt-2">Data Error</p><p class="text-xs">${coinError.message}</p>`; // Adjusted colors
+                     }
                 });
+                livePrices = newPrices; signalData = newSignals; renderPortfolio();
+                safeCreateIcons();
 
-                marketDataContainer.innerHTML = '';
-                const newPrices = {};
-                const newSignals = {};
-                
-                tickerData.forEach(item => {
-                    const symbol = item.symbol.replace('USDT', '');
-                    const currentPriceUSD = parseFloat(item.lastPrice);
-                    const currentPriceAED = currentPriceUSD * AED_RATE;
-                    const priceChangePercent = parseFloat(item.priceChangePercent);
-                    const klines = klineMap.get(symbol);
-                    
-                    newPrices[symbol] = currentPriceAED;
-                    
-                    let signalInfo = { signal: 'HOLD', strategy: 'N/A', icon: 'pause', rsi: 'N/A', macd: 'N/A', signalLine: 'N/A', histogram: 'N/A' };
-                    
-                    if (klines && klines.length > 0) {
-                        signalInfo = generateSignal(symbol, currentPriceUSD, klines);
-                    }
-                    
-                    newSignals[symbol] = signalInfo.signal; // Store signal for rebalancing
-                    
-                    const colorClass = signalInfo.signal === 'BUY' ? 'signal-buy' : 
-                                       signalInfo.signal === 'SELL' ? 'signal-sell' : 'signal-hold';
-                    
-                    const priceClass = priceChangePercent >= 0 ? 'price-up' : 'price-down';
-                    const sign = priceChangePercent >= 0 ? '+' : '';
-                    
-                    const macdHist = signalInfo.histogram !== 'N/A' ? parseFloat(signalInfo.histogram) : 0;
-                    const macdHistClass = macdHist >= 0 ? 'macd-hist-up' : 'macd-hist-down';
-                    
-                    const defaultThesisText = 'Click to set your plan (e.g., Short-term target, Long-term HODL).';
-                    const savedThesis = userTheses[symbol] || defaultThesisText;
-                    
-                    // Owner check for edit access
-                    const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
-                    const editableClass = isOwner ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-800 cursor-default';
-
-
-                    const html = `
-                        <div class="card p-4 border border-slate-700 flex flex-col justify-between">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-xl font-bold text-slate-100">${symbol}</h3>
-                                <div class="px-3 py-1 text-xs font-semibold rounded-full shadow-md ${colorClass} flex items-center">
-                                    <i data-lucide="${signalInfo.icon}" class="w-4 h-4 mr-1"></i>
-                                    ${signalInfo.signal.toUpperCase()}
-                                </div>
-                            </div>
-                            <div class="flex flex-col mb-3">
-                                <p class="text-2xl font-extrabold ${priceClass}">${currentPriceAED.toFixed(2)} <span class="text-sm font-normal text-slate-400">AED</span></p>
-                                <p class="text-lg font-medium text-slate-400">$${currentPriceUSD.toFixed(2)} USD</p>
-                                <p class="text-sm ${priceClass} mt-1">${sign}${priceChangePercent.toFixed(2)}% (24h)</p>
-                            </div>
-                            
-                            <div class="h-24 w-full mb-3 border border-slate-700 rounded-md p-1 bg-slate-800">
-                                <canvas id="chart-${symbol}"></canvas>
-                            </div>
-                            
-                            <div class="space-y-1 text-sm text-slate-400 border-t border-slate-700 pt-2">
-                                <p><span class="font-medium text-slate-300">Signal Basis:</span> ${signalInfo.strategy}</p>
-                                <p><span class="font-medium text-slate-300">RSI (14):</span> ${signalInfo.rsi}</p>
-                                <p class="text-xs">
-                                    <span class="font-medium text-slate-300">MACD:</span> ${signalInfo.macd} / ${signalInfo.signalLine} 
-                                    <span class="font-bold ${macdHistClass}"> [Hist: ${signalInfo.histogram}]</span>
-                                </p>
-                            </div>
-                            <div class="mt-2 pt-2 border-t border-slate-700">
-                                <p class="text-xs font-medium text-slate-500 mb-1">My Thesis & Plan</p>
-                                <div contenteditable="${isOwner ? 'true' : 'false'}" 
-                                     id="thesis-${symbol}"
-                                     class="text-xs text-slate-200 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 focus:ring-fuchsia-500 transition-colors ${editableClass}"
-                                     data-symbol="${symbol}"
-                                     onblur="window.saveThesis(this)">
-                                    ${savedThesis}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    marketDataContainer.innerHTML += html;
-                });
-                
-                // Update global prices and signals, then re-render portfolio
-                livePrices = newPrices;
-                signalData = newSignals;
-                renderPortfolio();
-
-                // RENDER CHARTS
-                CRYPTO_SYMBOLS.forEach(symbol => {
-                    const klines = klineMap.get(symbol);
-                    if (klines && klines.length > 0) {
-                        renderChart(symbol, klines);
-                    }
-                });
-                
-                window.lucide.createIcons();
-                
             } catch (error) {
-                console.error("Error fetching market data:", error);
-                marketDataContainer.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Failed to fetch data. Retrying shortly...</p>';
+                console.error("Critical Error fetching market data:", error.message);
+                const loadingPlaceholder = document.getElementById('loading-placeholder'); if (loadingPlaceholder) loadingPlaceholder.remove();
+                 if (DOM.marketDataContainer && !document.getElementById('fetch-error-msg')) {
+                     const errorMsg = document.createElement('p'); errorMsg.id = 'fetch-error-msg'; errorMsg.className = 'col-span-full text-center text-red-600 py-4 font-semibold'; // Adjusted color
+                     if (error.message.includes("429") || error.message.includes("418")) { errorMsg.textContent = 'Binance API rate limit hit. Wait 1 min & refresh.'; }
+                     else if (error.name === 'AbortError') { errorMsg.textContent = 'Binance API timed out. Retrying...'; }
+                     else if (error.message.includes("401")) { errorMsg.textContent = 'Binance API Error: Unauthorized (401).'; }
+                     else if (error.message.includes("Failed to fetch")) { errorMsg.textContent = 'Network Error: Failed to connect to Binance API.'; }
+                      else if (error.message.includes("400")) { errorMsg.textContent = 'Binance API Error: Bad Request (400). Check symbols?'; }
+                     else { errorMsg.textContent = 'Failed to load market data from Binance. Check console.'; }
+                     DOM.marketDataContainer.innerHTML = ''; DOM.marketDataContainer.appendChild(errorMsg);
+                 }
             }
         }
 
+        // --- updateMarketCardDetails ---
+        function updateMarketCardDetails(cardElement, symbol, signalInfo, currentPriceAED, currentPriceUSD, priceChangePercent) {
+            const signalDiv=cardElement.querySelector(`#signal-${symbol}`), priceAedP=cardElement.querySelector(`#price-aed-${symbol}`), priceUsdP=cardElement.querySelector(`#price-usd-${symbol}`), changePercentP=cardElement.querySelector(`#change-percent-${symbol}`), indicatorDetailsDiv=cardElement.querySelector('.indicator-details'), thesisDiv=cardElement.querySelector(`#thesis-${symbol}`);
+            if(!signalDiv||!priceAedP||!priceUsdP||!changePercentP||!indicatorDetailsDiv||!thesisDiv){console.error(`Elements missing for ${symbol}.`); return;}
+            const colorClass=signalInfo.signal==='BUY'?'signal-buy':signalInfo.signal==='SELL'?'signal-sell':'signal-hold'; signalDiv.className=`px-3 py-1 text-xs font-semibold rounded-full shadow-md ${colorClass} flex items-center`; signalDiv.innerHTML=`<i data-lucide="${signalInfo.icon}" class="w-4 h-4 mr-1"></i> ${signalInfo.signal.toUpperCase()}`;
+            const priceClass=priceChangePercent>=0?'price-up':'price-down', sign=priceChangePercent>=0?'+':''; priceAedP.className=`text-2xl font-extrabold ${priceClass}`; priceAedP.innerHTML=`${currentPriceAED.toFixed(2)} <span class="text-sm font-normal text-slate-500">AED</span>`; priceUsdP.textContent=`$${currentPriceUSD.toFixed(2)} USDT`; priceUsdP.className=`text-lg font-medium text-slate-500`; changePercentP.className=`text-sm ${priceClass} mt-1`; changePercentP.textContent=`${sign}${priceChangePercent.toFixed(2)}% (24h)`;
+            const macdHist=signalInfo.histogram!=='N/A'&&!isNaN(parseFloat(signalInfo.histogram))?parseFloat(signalInfo.histogram):0, macdHistClass=macdHist>=0?'macd-hist-up':'macd-hist-down'; indicatorDetailsDiv.innerHTML=`<p><span class="font-medium text-slate-700">Basis:</span> ${signalInfo.strategy}</p><p><span class="font-medium text-slate-700">RSI:</span> ${signalInfo.rsi}</p><p class="text-xs"><span class="font-medium text-slate-700">MACD:</span> ${signalInfo.macd}/${signalInfo.signalLine}<span class="font-bold ${macdHistClass}">[Hist:${signalInfo.histogram}]</span></p>`; indicatorDetailsDiv.className = `indicator-details space-y-1 text-sm text-slate-600 border-t pt-2 flex-grow`; // Adjusted text colors
+            const savedThesis=userTheses[symbol]||'Click to set your plan...'; if(document.activeElement!==thesisDiv){thesisDiv.innerHTML=savedThesis;}
+            const isOwner=auth.currentUser&&auth.currentUser.uid===OWNER_ID; thesisDiv.setAttribute('contenteditable',isOwner?'true':'false'); thesisDiv.className=`text-xs text-slate-700 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 focus:ring-fuchsia-500 transition-colors ${isOwner?'bg-slate-100 hover:bg-slate-200 border border-slate-300':'bg-slate-50 cursor-default border border-slate-200'}`; // Adjusted thesis box style
+        }
+
+        // --- renderPortfolio ---
         function renderPortfolio() {
-            if (!isAuthReady) return;
-
-            let totalInvestedAED = 0;
-            let totalValueAED = 0;
-
-            holdingsList.innerHTML = ''; 
-
-            if (investments.length === 0) {
-                rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-400 py-2 text-sm">No investments to analyze.</p>';
-                holdingsList.innerHTML = '<p class="text-center text-slate-400 py-4">No investments added yet.</p>';
-            }
-
-            investments.forEach(item => {
-                const livePriceAED = livePrices[item.currency] || 0;
-                const livePriceUSD = livePriceAED / AED_RATE;
-
-                const investedAmount = item.quantity * item.purchasePriceAED;
-                const currentValue = item.quantity * livePriceAED;
-                const pnl = currentValue - investedAmount;
-                const pnlPercent = investedAmount > 0 ? (pnl / investedAmount) * 100 : 0;
-                
-                totalInvestedAED += investedAmount;
-                totalValueAED += currentValue;
-
-                const pnlClass = pnl > 0 ? 'status-profit' : pnl < 0 ? 'status-loss' : 'status-zero';
-
-                // SL/TP Alert Check
-                let alertClass = '';
-                let alertMessage = '';
-
-                if (item.stopLossAED && livePriceAED <= item.stopLossAED) {
-                    alertClass = 'alert-sl';
-                    alertMessage = `SL HIT: Price at ${livePriceAED.toFixed(2)} AED`;
-                } else if (item.takeProfitAED && livePriceAED >= item.takeProfitAED) {
-                    alertClass = 'alert-tp';
-                    alertMessage = `TP REACHED: Price at ${livePriceAED.toFixed(2)} AED`;
-                }
-                
-                const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
-                const removeButton = isOwner ? 
-                    `<button onclick="window.removeInvestment('${item.id}')" class="ml-4 p-2 text-red-400 hover:text-red-600 rounded-full transition duration-150">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>` : '';
-
-
-                const holdingHtml = `
-                    <div id="holding-${item.id}" class="flex justify-between items-center p-3 bg-slate-700 rounded-lg border border-slate-600 ${alertClass}">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-lg font-bold text-slate-100">${item.currency} <span class="text-sm font-normal text-slate-400">(${item.quantity.toFixed(4)})</span></p>
-                            ${alertMessage ? `<p class="text-xs font-semibold mt-1">${alertMessage}</p>` : ''}
-                            <p class="text-xs text-slate-400 mt-1">
-                                Avg. Buy: ${item.purchasePriceAED.toFixed(2)} AED ($${(item.purchasePriceAED/AED_RATE).toFixed(2)})
-                            </p>
-                            <p class="text-xs text-slate-400">
-                                Current: ${livePriceAED.toFixed(2)} AED ($${livePriceUSD.toFixed(2)})
-                            </p>
-                            ${(item.stopLossAED || item.takeProfitAED) ? 
-                                `<p class="text-xs text-slate-500">
-                                    SL: ${item.stopLossAED ? item.stopLossAED.toFixed(2) + ' AED' : 'N/A'} | 
-                                    TP: ${item.takeProfitAED ? item.takeProfitAED.toFixed(2) + ' AED' : 'N/A'}
-                                </p>` : ''}
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-lg font-bold ${pnlClass}">${pnl.toFixed(2)} AED</p>
-                            <p class="text-sm ${pnlClass}">(${pnlPercent.toFixed(2)}%)</p>
-                        </div>
-                        ${removeButton}
-                    </div>
-                `;
-                holdingsList.innerHTML += holdingHtml;
-            });
-
-            // Update Summary
-            const overallPNLValue = totalValueAED - totalInvestedAED;
-            const overallPNLPercent = totalInvestedAED > 0 ? (overallPNLValue / totalInvestedAED) * 100 : 0;
-            const overallPNLClass = overallPNLValue > 0 ? 'status-profit' : overallPNLValue < 0 ? 'status-loss' : 'status-zero';
-
-            totalInvestedAedEl.textContent = totalInvestedAED.toFixed(2);
-            totalValueAedEl.textContent = totalValueAED.toFixed(2);
-            totalValueUsdEl.textContent = (totalValueAED / AED_RATE).toFixed(2);
-
-            overallPnlEl.textContent = `${overallPNLValue.toFixed(2)} AED (${overallPNLPercent.toFixed(2)}%)`;
-            overallPnlEl.className = `text-3xl font-extrabold ${overallPNLClass}`;
-            
-            // Rebalance check (only runs if investments exist)
+            if (!isAuthReady || !DOM.holdingsList || !DOM.rebalanceSuggestionsEl || !DOM.totalInvestedAedEl || !DOM.totalValueAedEl || !DOM.totalValueUsdEl || !DOM.overallPnlEl) { return; }
+            let totalInvestedAED = 0, totalValueAED = 0; DOM.holdingsList.innerHTML = '';
+            if (investments.length === 0) { DOM.rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-500 py-2 text-sm">No investments.</p>'; DOM.holdingsList.innerHTML = '<p class="text-center text-slate-500 py-4">No investments added.</p>'; totalInvestedAED = 0; totalValueAED = 0; }
+            else { investments.forEach(item => { const livePriceAED=livePrices[item.currency]||0, livePriceUSD=livePriceAED>0?livePriceAED/AED_RATE:0, purchasePriceAED=typeof item.purchasePriceAED==='number'?item.purchasePriceAED:0, quantity=typeof item.quantity==='number'?item.quantity:0; const investedAmount=quantity*purchasePriceAED, currentValue=quantity*livePriceAED, pnl=currentValue-investedAmount, pnlPercent=investedAmount>0?(pnl/investedAmount)*100:0; totalInvestedAED+=investedAmount; totalValueAED+=currentValue; const pnlClass=pnl>0?'status-profit':pnl<0?'status-loss':'status-zero'; let alertClass='', alertMessage=''; const stopLossAED=typeof item.stopLossAED==='number'?item.stopLossAED:null, takeProfitAED=typeof item.takeProfitAED==='number'?item.takeProfitAED:null; if(stopLossAED&&livePriceAED<=stopLossAED&&livePriceAED>0){alertClass='alert-sl'; alertMessage=`SL HIT @ ${livePriceAED.toFixed(2)}`;}else if(takeProfitAED&&livePriceAED>=takeProfitAED&&livePriceAED>0){alertClass='alert-tp'; alertMessage=`TP HIT @ ${livePriceAED.toFixed(2)}`;} const isOwner=auth.currentUser&&auth.currentUser.uid===OWNER_ID; const removeButton=isOwner?`<button onclick="window.removeInvestment('${item.id}')" class="ml-4 p-1 text-red-500 hover:text-red-700 rounded-full transition"><i data-lucide="x" class="w-4 h-4"></i></button>`:''; const holdingHtml=`<div id="holding-${item.id}" class="flex justify-between items-center p-3 rounded-lg border ${alertClass}"><div class="flex-1 min-w-0"><p class="text-lg font-bold">${item.currency}<span class="text-sm font-normal text-slate-500">(${(quantity||0).toFixed(4)})</span></p>${alertMessage?`<p class="text-xs font-semibold mt-1">${alertMessage} AED</p>`:''}<p class="text-xs text-slate-500 mt-1">Avg Buy: ${(purchasePriceAED||0).toFixed(2)}($${((purchasePriceAED||0)/AED_RATE).toFixed(2)})</p><p class="text-xs text-slate-500">Current: ${livePriceAED.toFixed(2)}($${livePriceUSD.toFixed(2)})</p>${(stopLossAED||takeProfitAED)?`<p class="text-xs text-slate-400">SL:${stopLossAED?stopLossAED.toFixed(2):'N/A'}|TP:${takeProfitAED?takeProfitAED.toFixed(2):'N/A'}</p>`:''}</div><div class="text-right ml-2 flex-shrink-0"><p class="text-base font-bold ${pnlClass}">${pnl.toFixed(2)}</p><p class="text-sm ${pnlClass}">(${pnlPercent.toFixed(2)}%)</p></div>${removeButton}</div>`; DOM.holdingsList.innerHTML += holdingHtml; }); } // Adjusted text colors
+            const overallPNLValue = totalValueAED - totalInvestedAED, overallPNLPercent = totalInvestedAED > 0 ? (overallPNLValue / totalInvestedAED) * 100 : 0, overallPNLClass = overallPNLValue > 0 ? 'status-profit' : overallPNLValue < 0 ? 'status-loss' : 'status-zero'; DOM.totalInvestedAedEl.textContent = totalInvestedAED.toFixed(2); DOM.totalValueAedEl.textContent = totalValueAED.toFixed(2); DOM.totalValueUsdEl.textContent = totalValueAED > 0 ? (totalValueAED / AED_RATE).toFixed(2) : '0.00'; DOM.overallPnlEl.textContent = `${overallPNLValue.toFixed(2)} AED (${overallPNLPercent.toFixed(2)}%)`; DOM.overallPnlEl.className = `text-3xl font-extrabold ${overallPNLClass}`;
             calculateRebalanceSuggestions(totalValueAED);
-
-            window.lucide.createIcons();
-            
-            // Recheck access after portfolio renders
             checkOwnerAccess();
+            safeCreateIcons();
         }
 
-        // --- FIRESTORE OPERATIONS ---
-
-        // Path for portfolio entries: artifacts/{appId}/portfolio_entries
-        function getCollectionRef() {
-            if (!db) return null;
-            const collectionPath = `artifacts/${FIREBASE_CONFIG.appId}/portfolio_entries`;
-            return firebase.collection(db, collectionPath);
+        // --- calculateRebalanceSuggestions ---
+        function calculateRebalanceSuggestions(totalValueAED) {
+            if (!DOM.rebalanceSuggestionsEl) return; const suggestions = []; const availableInvestedCoins=Array.from(new Set(investments.map(i=>i.currency))).filter(c=>livePrices[c]!==undefined&&livePrices[c]>0); const totalInvestedWeight=availableInvestedCoins.length; if(totalInvestedWeight===0||totalValueAED===0){DOM.rebalanceSuggestionsEl.innerHTML='<p class="text-center text-slate-500 py-2 text-sm">No valid investments.</p>'; return;} const currentCoinValues={}; availableInvestedCoins.forEach(c=>{currentCoinValues[c]=0;}); investments.forEach(item=>{if(availableInvestedCoins.includes(item.currency)){currentCoinValues[item.currency]+=item.quantity*livePrices[item.currency];}}); const validTotalValueAED=availableInvestedCoins.reduce((sum,c)=>sum+currentCoinValues[c],0); if(validTotalValueAED===0){DOM.rebalanceSuggestionsEl.innerHTML='<p class="text-center text-slate-500 py-2 text-sm">Portfolio value is zero.</p>'; return;} const targetWeightPercent=100/totalInvestedWeight; for(const currency of availableInvestedCoins){const currentValue=currentCoinValues[currency], currentWeightPercent=(currentValue/validTotalValueAED)*100, driftPercent=currentWeightPercent-targetWeightPercent, signal=signalData[currency]||'HOLD'; const driftThreshold=Math.abs(driftPercent)>REBALANCE_THRESHOLD_PERCENT; if(driftThreshold){let requiredChangeAED=0, action='HOLD', reason=''; const targetValue=validTotalValueAED*(targetWeightPercent/100); requiredChangeAED=Math.abs(currentValue-targetValue); if(driftPercent>0){reason=`Overweight(${currentWeightPercent.toFixed(1)}% vs ${targetWeightPercent.toFixed(1)}%)`; if(signal==='SELL'){action='SELL'; reason+=' - Align SELL';}else if(signal==='BUY'){action='HOLD'; reason+=' - CONFLICT: Ignore (BUY)';}else{action='SELL'; reason+=' - Threshold';}}else{reason=`Underweight(${currentWeightPercent.toFixed(1)}% vs ${targetWeightPercent.toFixed(1)}%)`; if(signal==='BUY'){action='BUY'; reason+=' - Align BUY';}else if(signal==='SELL'){action='HOLD'; reason+=' - CONFLICT: Ignore (SELL)';}else{action='BUY'; reason+=' - Threshold';}} if(action!=='HOLD'){suggestions.push({currency, action, amountAED:requiredChangeAED, reason});}}} if(suggestions.length===0){DOM.rebalanceSuggestionsEl.innerHTML='<p class="text-center text-slate-500 py-2 text-sm">Balanced / Conflicted.</p>';} else {DOM.rebalanceSuggestionsEl.innerHTML=suggestions.map(s=>{const c=s.action==='BUY'?'rebalance-buy':'rebalance-sell', i=s.action==='BUY'?'trending-up':'trending-down'; return `<div class="p-3 rounded-lg ${c} flex justify-between items-center text-sm font-medium"><span class="flex items-center"><i data-lucide="${i}" class="w-4 h-4 mr-2"></i> ${s.action} ${s.amountAED.toFixed(2)} AED ${s.currency}</span><span class="text-xs ml-2">(${s.reason})</span></div>`;}).join('');} // Adjusted text colors
+            safeCreateIcons();
         }
 
-        // Path for thesis document: artifacts/{appId}/config/thesis_data
-        async function getThesisDocRef() {
-            if (!db) return null;
-            const configDocPath = `artifacts/${FIREBASE_CONFIG.appId}/config`;
-            return firebase.doc(db, configDocPath, 'thesis_data');
-        }
+        // --- FIRESTORE OPERATIONS --- (Simplified, No color changes needed)
+        function getCollectionRef() { if (!db) return null; const p=`artifacts/${firebaseConfig.appId}/portfolio_entries`; try {return firebase.collection(db,p);} catch(e){console.error("Collection ref error:",e);return null;} }
+        async function getThesisDocRef() { if (!db) return null; const p=`artifacts/${firebaseConfig.appId}/config`; try {return firebase.doc(db,p,'thesis_data');} catch(e){console.error("Doc ref error:",e);return null;} }
+        async function loadTheses() { const d=await getThesisDocRef(); if(!d)return; try {const s=await firebase.getDoc(d); if(s.exists()){userTheses=s.data().theses||{};}} catch(e){console.error("Load theses error:",e);} }
+        window.saveThesis=async function(el){ if(!auth||!auth.currentUser)return;const o=auth.currentUser.uid===OWNER_ID;if(!o)return;const s=el.getAttribute('data-symbol'),c=el.textContent.trim(),p='Click to set your plan...'; const d=await getThesisDocRef(); if(!d){console.error("Thesis doc ref failed.");return;} if(c===p||c===''){try{await firebase.setDoc(d,{theses:{[s]:firebase.deleteField()}},{merge:true}); delete userTheses[s];}catch(e){console.error("Delete thesis error:",e);}}else{userTheses[s]=c; try{await firebase.setDoc(d,{theses:userTheses},{merge:true});}catch(e){console.error("Save thesis error:",e);}} }
+        async function saveInvestment(ev){ ev.preventDefault(); if(!DOM.formStatusEl||!DOM.investmentForm)return; DOM.formStatusEl.textContent='Adding...'; const cE=DOM.investmentForm.querySelector('#currency'),qE=DOM.investmentForm.querySelector('#quantity'),pE=DOM.investmentForm.querySelector('#price'),tI=DOM.investmentForm.querySelector('#takeProfit'),sI=DOM.investmentForm.querySelector('#stopLoss'); if(!cE||!qE||!pE||!tI||!sI){DOM.formStatusEl.textContent='Form error.';return;} const c=cE.value,q=parseFloat(qE.value),p=parseFloat(pE.value),t=tI.value?parseFloat(tI.value):null,s=sI.value?parseFloat(sI.value):null; if(!c||isNaN(q)||isNaN(p)||q<=0||p<=0){DOM.formStatusEl.textContent='Invalid input.';return;} const r=getCollectionRef(); if(!r){DOM.formStatusEl.textContent='DB error.';return;} try{await firebase.addDoc(r,{currency:c,quantity:q,purchasePriceAED:p,takeProfitAED:t,stopLossAED:s,timestamp:firebase.Timestamp.fromDate(new Date())}); DOM.formStatusEl.textContent='Added!'; DOM.formStatusEl.className='text-center text-sm mt-2 text-green-600'; DOM.investmentForm.reset(); setTimeout(()=>{if(DOM.formStatusEl)DOM.formStatusEl.textContent='';},3000);}catch(e){DOM.formStatusEl.textContent='Save error.'; DOM.formStatusEl.className='text-center text-sm mt-2 text-red-600'; console.error("Add doc error:",e);} } // Added status colors
+        window.removeInvestment=async function(id){ if(!auth||!auth.currentUser)return; const o=auth.currentUser.uid===OWNER_ID; if(!o)return; if(!db){console.error("DB not init.");return;} const d=firebase.doc(db,`artifacts/${firebaseConfig.appId}/portfolio_entries`,id); try{await firebase.deleteDoc(d);}catch(e){console.error("Remove doc error:",e);} }
 
-        async function loadTheses() {
-            const docRef = await getThesisDocRef();
-            if (!docRef) return;
-            
-            try {
-                const docSnap = await firebase.getDoc(docRef);
-                if (docSnap.exists()) {
-                    userTheses = docSnap.data().theses || {};
-                }
-            } catch (e) {
-                console.error("Error loading user theses:", e);
-            }
-        }
-
-        window.saveThesis = async function(element) {
-            const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
-            if (!isOwner) return;
-
-            const symbol = element.getAttribute('data-symbol');
-            const defaultText = element.getAttribute('data-default-text');
-            const content = element.textContent.trim();
-            
-            if (content === defaultText || content === '') {
-                delete userTheses[symbol];
-            } else {
-                userTheses[symbol] = content;
-            }
-
-            const docRef = getThesisDocRef();
-            if (!docRef) return;
-            
-            try {
-                await firebase.setDoc(docRef, { theses: userTheses }, { merge: true });
-            } catch (e) {
-                console.error("Error saving user thesis:", e);
-            }
-        }
-
-        async function saveInvestment(event) {
-            event.preventDefault();
-            formStatusEl.textContent = 'Adding investment...';
-            
-            const currency = document.getElementById('currency').value;
-            const quantity = parseFloat(document.getElementById('quantity').value);
-            const price = parseFloat(document.getElementById('price').value);
-            const tp = document.getElementById('takeProfit').value ? parseFloat(document.getElementById('takeProfit').value) : null;
-            const sl = document.getElementById('stopLoss').value ? parseFloat(document.getElementById('stopLoss').value) : null;
-
-            if (!currency || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
-                formStatusEl.textContent = 'Please enter valid quantity and price.';
-                return;
-            }
-
-            const collectionRef = getCollectionRef();
-            if (!collectionRef) return;
-
-            try {
-                await firebase.addDoc(collectionRef, {
-                    currency: currency,
-                    quantity: quantity,
-                    purchasePriceAED: price,
-                    takeProfitAED: tp,
-                    stopLossAED: sl,
-                    timestamp: firebase.Timestamp.fromDate(new Date())
-                });
-                
-                formStatusEl.textContent = 'Investment added successfully!';
-                investmentForm.reset();
-            } catch (e) {
-                formStatusEl.textContent = 'Error saving: Check console.';
-                console.error("Error adding document: ", e);
-            }
-        }
-
-        window.removeInvestment = async function(id) {
-            const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
-            if (!isOwner) return;
-
-            const docRef = firebase.doc(db, `artifacts/${FIREBASE_CONFIG.appId}/portfolio_entries`, id);
-            
-            try {
-                await firebase.deleteDoc(docRef);
-            } catch (e) {
-                console.error("Error removing document: ", e);
-            }
-        }
-        
-        // --- AUTHENTICATION & INITIALIZATION ---
-
-        function checkOwnerAccess() {
-            const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
-            
-            if (isOwner) {
-                ownerAccessMessage.classList.add('hidden');
-                investmentForm.classList.remove('hidden');
-                ownerLoginModal.classList.remove('flex'); // Hide modal if they logged in
-                ownerLoginModal.classList.add('hidden');
-                console.log("Owner Access: GRANTED.");
-            } else {
-                ownerAccessMessage.classList.remove('hidden');
-                investmentForm.classList.add('hidden');
-                console.log("Owner Access: DENIED. Viewing as Guest.");
-            }
-            // FIX: Removed recursive call to renderPortfolio here.
-        }
+        // --- AUTH & INIT ---
+        function checkOwnerAccess() { if(!DOM.ownerAccessMessage||!DOM.investmentForm||!DOM.ownerLoginModal||!auth){return;} const o=auth.currentUser&&auth.currentUser.uid===OWNER_ID; DOM.ownerAccessMessage.classList.toggle('hidden',o); DOM.investmentForm.classList.toggle('hidden',!o); if(o&&DOM.ownerLoginModal){DOM.ownerLoginModal.classList.remove('flex'); DOM.ownerLoginModal.classList.add('hidden');} }
+        function assignAndValidateDOMElements() { DOM.marketDataContainer=document.getElementById('market-data-container'); DOM.holdingsList=document.getElementById('holdings-list'); DOM.overallPnlEl=document.getElementById('overall-pnl'); DOM.totalInvestedAedEl=document.getElementById('total-invested-aed'); DOM.totalValueAedEl=document.getElementById('total-value-aed'); DOM.totalValueUsdEl=document.getElementById('total-value-usd'); DOM.formStatusEl=document.getElementById('form-status'); DOM.investmentForm=document.getElementById('investment-form'); DOM.ownerAccessMessage=document.getElementById('owner-access-message'); DOM.signInOwnerBtn=document.getElementById('sign-in-owner'); DOM.ownerLoginModal=document.getElementById('owner-login-modal'); DOM.ownerLoginForm=document.getElementById('owner-login-form'); DOM.loginStatusMessage=document.getElementById('login-status-message'); DOM.rebalanceSuggestionsEl=document.getElementById('rebalance-suggestions'); if(!DOM.marketDataContainer){console.error("CRITICAL DOM ERROR"); document.body.innerHTML='<div class="text-red-600 text-center p-8">Error loading UI.</div>'; return false;} return true; } // Adjusted color
 
         async function initializeFirebase() {
-            if (!firebaseConfig || !firebaseConfig.projectId) {
-                 console.error("Firebase configuration not found. Portfolio tracking will be disabled.");
-                 return;
-            }
-            
-            const app = firebase.initializeApp(firebaseConfig);
-            db = firebase.getFirestore(app);
-            auth = firebase.getAuth(app);
-            firebase.setLogLevel('error');
-            
-            // Use anonymous sign-in for all users (guests and owner alike)
-            if (!auth.currentUser) {
-                await firebase.signInAnonymously(auth).catch(error => {
-                    console.error("Anonymous sign-in failed:", error);
-                });
-            }
+             if (!assignAndValidateDOMElements()) return;
+            if (!firebaseConfig || !firebaseConfig.projectId) { console.error("Firebase config missing."); return; }
+            try { const app = firebase.initializeApp(firebaseConfig); db = firebase.getFirestore(app); auth = firebase.getAuth(app); }
+            catch (e) { console.error("Firebase Init Failed:", e); if (DOM.marketDataContainer) { DOM.marketDataContainer.innerHTML = '<p class="text-red-600 text-center p-4">Backend connection error.</p>'; } return; } // Adjusted color
 
+            // Setup Event Listeners
+            if (DOM.signInOwnerBtn) { DOM.signInOwnerBtn.addEventListener('click', () => { if (DOM.ownerLoginModal) { DOM.ownerLoginModal.classList.remove('hidden'); DOM.ownerLoginModal.classList.add('flex'); if (DOM.loginStatusMessage) DOM.loginStatusMessage.textContent = ''; } }); }
+            if (DOM.ownerLoginForm) { DOM.ownerLoginForm.addEventListener('submit', async (e) => { e.preventDefault(); const eI=DOM.ownerLoginForm.querySelector('#owner-email'), pI=DOM.ownerLoginForm.querySelector('#owner-password'); if(!eI||!pI)return; const em=eI.value, pw=pI.value; if(DOM.loginStatusMessage)DOM.loginStatusMessage.textContent='Signing in...'; try { const uC=await firebase.signInWithEmailAndPassword(auth,em,pw); if(uC.user.uid===OWNER_ID){if(DOM.ownerLoginModal){DOM.ownerLoginModal.classList.remove('flex'); DOM.ownerLoginModal.classList.add('hidden');} checkOwnerAccess();} else {if(DOM.loginStatusMessage)DOM.loginStatusMessage.textContent='Not owner.'; await auth.signOut(); await firebase.signInAnonymously(auth);} } catch (error) {console.error("Owner Login Failed:",error); if(DOM.loginStatusMessage)DOM.loginStatusMessage.textContent=`Error: ${error.code||error.message}`; } }); }
+            if (DOM.investmentForm) DOM.investmentForm.addEventListener('submit', saveInvestment);
+
+            // Auth State Change Listener
             firebase.onAuthStateChanged(auth, async (user) => {
-                isAuthReady = true;
-                if (user) {
-                    userId = user.uid;
-                    checkOwnerAccess();
-                    
-                    // 1. Load Theses
-                    await loadTheses();
-                    
-                    // 2. Start Real-time Portfolio Listener
-                    const collectionRef = getCollectionRef();
-                    if (collectionRef) {
-                        firebase.onSnapshot(collectionRef, (snapshot) => {
-                            investments = snapshot.docs.map(doc => ({
-                                id: doc.id,
-                                ...doc.data()
-                            }));
-                            renderPortfolio(); // This is the primary call for rendering portfolio updates
-                        }, (error) => {
-                            console.error("Portfolio Snapshot Error:", error);
-                        });
-                    }
-                } else {
-                    userId = null;
-                    isAuthReady = true; 
-                    console.log("User logged out or unauthorized.");
-                }
-                // Check access controls after auth state changes
-                checkOwnerAccess(); 
+                 isAuthReady = true;
+                 if (user) {
+                      userId = user.uid; await loadTheses(); const cR=getCollectionRef();
+                      if (cR) { firebase.onSnapshot(cR, (s) => { investments = s.docs.map(d => ({ id: d.id, ...d.data() })); renderPortfolio(); }, (e) => { console.error("Snapshot Error:", e); }); }
+                      else { console.error("Failed portfolio ref."); renderPortfolio(); }
+                 } else {
+                      userId = null; investments = []; userTheses = {}; console.log("Signing in anonymously...");
+                      try { const aU=await firebase.signInAnonymously(auth); userId = aU.user.uid; console.log("Anon UID:", userId); }
+                      catch (e) { console.error("Anon sign-in failed:", e); if (DOM.marketDataContainer) { DOM.marketDataContainer.innerHTML = '<p class="text-red-600 text-center p-4">Auth failed. Refresh.</p>'; } } // Adjusted color
+                       renderPortfolio();
+                 }
+                 checkOwnerAccess();
             });
-            
-            // Start the market data fetch immediately and then set interval
-            fetchRealTimeData();
-            setInterval(fetchRealTimeData, UPDATE_INTERVAL_MS);
-        }
-        
-        // --- EVENT LISTENERS ---
-        
-        // Set up the owner sign-in modal/button
-        if(signInOwnerBtn) {
-             signInOwnerBtn.addEventListener('click', () => {
-                ownerLoginModal.classList.remove('hidden');
-                ownerLoginModal.classList.add('flex');
-                loginStatusMessage.textContent = '';
-            });
-        }
-       
-        // Handle owner login submission
-        if(ownerLoginForm) {
-            ownerLoginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('owner-email').value;
-                const password = document.getElementById('owner-password').value;
-                loginStatusMessage.textContent = 'Signing in...';
-                
-                try {
-                    const userCredential = await firebase.signInWithEmailAndPassword(auth, email, password);
-                    
-                    // Check if the signed-in user is the actual OWNER_ID
-                    if (userCredential.user.uid === OWNER_ID) {
-                        ownerLoginModal.classList.remove('flex');
-                        ownerLoginModal.classList.add('hidden');
-                    } else {
-                        loginStatusMessage.textContent = 'Login successful, but this user is not the designated owner.';
-                        await auth.signOut();
-                    }
-                } catch (error) {
-                    console.error("Owner Login Failed:", error);
-                    loginStatusMessage.textContent = 'Error: Invalid email or password.';
-                }
-            });
+
+            // Deferred Execution
+            setTimeout(() => {
+                 safeCreateIcons();
+                 fetchRealTimeData();
+                 setInterval(fetchRealTimeData, UPDATE_INTERVAL_MS);
+            }, 100);
         }
 
-        // Initialize App on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeFirebase();
-        });
-
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
     </script>
 </body>
 </html>
+
