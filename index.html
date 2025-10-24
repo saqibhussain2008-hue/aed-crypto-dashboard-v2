@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saqib Hussain Crypto Tracker</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Load Chart.js for Visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js](https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js)"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap)');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0F172A; /* Slate 900 - Deep background */
@@ -50,52 +47,48 @@
         /* SL/TP Alerts - Adjusted for dark mode contrast */
         .alert-sl { background-color: #450A0A; border: 1px solid #B91C1C; color: #FCA5A5; } /* Dark Red */
         .alert-tp { background-color: #064E3B; border: 1px solid #10B981; color: #A7F3D0; } /* Dark Green */
+        
+        /* Rebalance Suggestions */
+        .rebalance-buy { background-color: #064E3B; border: 1px solid #10B981; color: #A7F3D0; }
+        .rebalance-sell { background-color: #450A0A; border: 1px solid #B91C1C; color: #FCA5A5; }
     </style>
-    <!-- Firebase Imports -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js)";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js)";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField, Timestamp } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js)";
+        import { setLogLevel } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js)";
         
         // Expose Firebase objects globally for use in the main script block
         window.firebase = {
-            initializeApp, getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged,
-            getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField,
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword,
+            getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, deleteField, Timestamp,
             setLogLevel
         };
     </script>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
-    
-    <!-- Owner Login Modal -->
-    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
-        <div class="card p-6 w-full max-w-sm">
-            <h2 class="text-2xl font-bold neon-accent mb-4 flex items-center">
-                <i data-lucide="key" class="mr-2"></i> Owner Sign In
-            </h2>
-            <p class="text-sm text-slate-400 mb-4">
-                You are currently viewing as a guest. To gain **write access**, please sign in with the Owner's Email and Password.
-            </p>
-            <p class="text-xs text-yellow-400 mb-4">
-                *Note: You must first create this Owner account in your Firebase Console: Authentication > Users.*
-            </p>
-            <form id="login-form" class="space-y-4">
+
+    <div id="owner-login-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center">
+        <div class="card p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold neon-accent mb-4">Owner Sign In Required</h3>
+            <p class="text-slate-400 mb-4">You are viewing as a guest. Please sign in with the owner credentials to manage the portfolio (add/edit/delete entries).</p>
+            <form id="owner-login-form" class="space-y-4">
                 <div>
                     <label for="owner-email" class="block text-sm font-medium text-slate-400">Email</label>
-                    <input type="email" id="owner-email" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="owner@yourdomain.com">
+                    <input type="email" id="owner-email" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="owner@example.com">
                 </div>
                 <div>
                     <label for="owner-password" class="block text-sm font-medium text-slate-400">Password</label>
-                    <input type="password" id="owner-password" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="********">
+                    <input type="password" id="owner-password" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="••••••••">
                 </div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 transition duration-150">
-                    Sign In
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                    Sign In as Owner
                 </button>
-                <p id="login-error-message" class="text-center text-sm text-red-400 mt-2 hidden">Invalid credentials. Try again.</p>
+                <p id="login-status-message" class="text-center text-sm mt-2 text-red-400"></p>
             </form>
         </div>
     </div>
+
 
     <header class="text-center mb-8">
         <h1 class="text-4xl font-extrabold text-slate-100 flex items-center justify-center">
@@ -105,41 +98,39 @@
         <p class="text-slate-400 mt-2">Real-time prices, **High-Conviction** signals, and portfolio tracker.</p>
     </header>
 
-    <!-- Main Container -->
     <main class="max-w-7xl mx-auto space-y-8">
 
-        <!-- Disclaimer -->
         <div id="disclaimer" class="p-4 bg-yellow-900/40 border-l-4 border-yellow-500 text-yellow-300 rounded-md shadow-md">
             <h3 class="font-bold text-lg mb-1">⚠️ Financial Disclaimer (5-Minute Interval)</h3>
             <p class="text-sm">Signals are now based on **5-minute price data** for more stability. This dashboard is for **educational and simulation purposes only**; any real investment decisions are made at your own risk. Please use the "My Thesis & Plan" section to document your strategy.</p>
         </div>
 
-        <!-- Real-Time Market Data -->
         <section class="card p-6">
             <h2 class="text-2xl font-semibold text-slate-100 mb-4">Market Data & Signals (USDT/AED - 5 Min Interval)</h2>
-            <div id="market-data-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- Market data cards will be injected here -->
+            <div id="market-data-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6 gap-4">
                 <p class="col-span-full text-center text-slate-400 py-4">Loading real-time data...</p>
             </div>
         </section>
 
-        <!-- Portfolio Management and Tracking -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- 1. Portfolio Summary -->
             <div class="card p-6 lg:col-span-2">
                 <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
                     <i data-lucide="wallet" class="mr-2 neon-accent"></i>
                     My Portfolio Summary
                 </h2>
-                <div id="portfolio-summary" class="grid grid-cols-2 gap-4 border-b border-slate-700 pb-4 mb-4">
+                <div id="portfolio-summary" class="grid grid-cols-3 gap-4 border-b border-slate-700 pb-4 mb-4">
                     <div class="p-3 bg-slate-700 rounded-lg">
                         <p class="text-sm text-slate-400">Total Invested (AED)</p>
-                        <p id="total-invested" class="text-xl font-bold text-slate-100">0.00</p>
+                        <p id="total-invested-aed" class="text-xl font-bold text-slate-100">0.00</p>
                     </div>
                     <div class="p-3 bg-slate-700 rounded-lg">
-                        <p class="text-sm text-slate-400">Total Current Value (AED)</p>
-                        <p id="total-value" class="text-xl font-bold text-slate-100">0.00</p>
+                        <p class="text-sm text-slate-400">Total Value (AED)</p>
+                        <p id="total-value-aed" class="text-xl font-bold text-slate-100">0.00</p>
+                    </div>
+                    <div class="p-3 bg-slate-700 rounded-lg">
+                        <p class="text-sm text-slate-400">Total Value (USD)</p>
+                        <p id="total-value-usd" class="text-xl font-bold text-slate-100">0.00</p>
                     </div>
                 </div>
                 <div class="mb-4">
@@ -147,32 +138,86 @@
                     <p id="overall-pnl" class="text-3xl font-extrabold status-zero">0.00 (0.00%)</p>
                 </div>
 
-                <h3 class="text-xl font-medium text-slate-100 mb-3 border-t border-slate-700 pt-4">Current Holdings</h3>
+                <div class="mt-6 pt-4 border-t border-slate-700">
+                    <h3 class="text-xl font-medium text-slate-100 mb-3 flex items-center">
+                        <i data-lucide="scale" class="w-5 h-5 mr-2 neon-accent"></i>
+                        Rebalancing Recommendations
+                    </h3>
+                    <div id="rebalance-suggestions" class="space-y-2">
+                         <p class="text-center text-slate-400 py-2 text-sm">Waiting for portfolio data to calculate targets...</p>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl font-medium text-slate-100 mb-3 border-t border-slate-700 pt-4 mt-6">Current Holdings</h3>
                 <div id="holdings-list" class="space-y-2">
                     <p class="text-center text-slate-400 py-4">No investments added yet.</p>
                 </div>
             </div>
 
-            <!-- 2. Add Investment Form -->
             <div id="investment-card" class="card p-6">
-                <!-- Content will be replaced dynamically -->
-                <p class="text-slate-400 text-center p-4">Loading access controls...</p>
+                <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
+                    <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
+                    Add Investment
+                </h2>
+                <div id="owner-access-message" class="space-y-4">
+                    <p class="text-center text-sm text-red-400">
+                        Portfolio management is restricted.
+                    </p>
+                    <button id="sign-in-owner" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                        Sign In as Owner
+                    </button>
+                </div>
+                
+                <form id="investment-form" class="space-y-4 hidden">
+                    <div>
+                        <label for="currency" class="block text-sm font-medium text-slate-400">Currency</label>
+                        <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-600 bg-slate-700 text-slate-200 focus:outline-none focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm rounded-md shadow-sm">
+                            <option value="">Select Coin</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="CAKE">PancakeSwap (CAKE)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="BNB">Binance Coin (BNB)</option>
+                            <option value="APRB">APRIORIO (APRB)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium text-slate-400">Quantity Purchased</label>
+                        <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5">
+                    </div>
+                    <div>
+                        <label for="price" class="block text-sm font-medium text-slate-400">Purchase Price (AED)</label>
+                        <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00">
+                    </div>
+
+                    <div class="border-t border-slate-700 pt-4 space-y-3">
+                        <p class="text-sm font-semibold text-slate-200">Risk Management (Optional)</p>
+                        <div>
+                            <label for="takeProfit" class="block text-xs font-medium text-slate-400">Take-Profit (TP) Price (AED)</label>
+                            <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00">
+                        </div>
+                        <div>
+                            <label for="stopLoss" class="block text-xs font-medium text-slate-400">Stop-Loss (SL) Price (AED)</label>
+                            <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
+                        Add Investment
+                    </button>
+                    <p id="form-status" class="text-center text-sm mt-2"></p>
+                </form>
             </div>
         </section>
 
     </main>
     
-    <!-- Footer -->
     <footer class="mt-12 text-center text-slate-600 text-sm">
-        <p>Data provided by Binance Public API. Currency conversion based on fixed 1 USDT = 3.6725 AED rate. Signals are for educational purposes.</p>
+        <p>Data provided by Binance Data API. Currency conversion based on fixed 1 USDT = 3.6725 AED rate. Signals are for educational purposes.</p>
     </footer>
 
     <script type="module">
-        // The main script block uses the globally exposed Firebase objects.
-        
-        // ----------------------------------------------------------------------------------
         // --- 1. CONFIGURATION FOR GITHUB PAGES (REQUIRED FIX) ---
-        // --- FIREBASE CONFIGURATION (NOW HARDCODED) ---
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAI3Pl5vgTJmeAC7cZFcBH2DAmkDWuBjEc",
             authDomain: "crypto-dashboard-58a99.firebaseapp.com",
@@ -182,55 +227,49 @@
             appId: "1:1033795648349:web:c965ff343a06a2cee3c6b4",
             measurementId: "G-QS72PY0FND"
         };
-        // ----------------------------------------------------------------------------------
-
-
-        // --- 2. OWNER CONFIGURATION (EDIT THIS LINE WITH YOUR UID) ---
-        // UID HAS BEEN SUCCESSFULLY RETRIEVED AND HARDCODED:
+        // --- 2. OWNER CONFIGURATION ---
         const OWNER_ID = 'OpICNqYsGaMNcRwQ6L3C9fx5wXz1'; 
         // -------------------------------------------------------------
-
+        
         // Configuration
         const AED_RATE = 3.6725;
-        const CRYPTO_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB"];
-        // CRITICAL FIX: Changed from https://api.binance.com/api/v3 to the more stable data API domain
-        const BINANCE_BASE_URL = "https://data-api.binance.vision/api/v3";
+        const CRYPTO_SYMBOLS = ["BTC", "ETH", "CAKE", "SOL", "BNB", "APRB"];
+        const BINANCE_BASE_URL = "[https://data-api.binance.vision/api/v3](https://data-api.binance.vision/api/v3)"; // Switched to data-api for reliability
         const UPDATE_INTERVAL_MS = 15000; // 15 seconds update frequency (for UI update)
-
-        // --- CRITICAL STATE VARIABLES MOVED HERE FOR SCOPE FIX ---
-        // Store real-time prices globally
-        let livePrices = {};
-        // Portfolio state
-        let investments = [];
-        let userTheses = {}; // New global map for user thesis/notes
-        // --- END CRITICAL STATE VARIABLES ---
-
+        const REBALANCE_THRESHOLD_PERCENT = 10; // Rebalance if weight drifts +/- 10%
 
         // Store Chart instances globally to destroy/re-render
         let charts = {};
 
-        // --- Firebase Setup ---
-        const appId = FIREBASE_CONFIG.appId || 'default-app-id'; // Use hardcoded appId now
-        const firebaseConfig = FIREBASE_CONFIG; // Use hardcoded config now
-        const initialAuthToken = null; // No custom token needed on public web
-
+        // --- Firebase State Variables (Top of Scope) ---
         let db, auth, userId = null;
         let isAuthReady = false;
+        let livePrices = {};
+        let investments = [];
+        let userTheses = {};
+        let signalData = {}; // Stores the latest signal (Buy/Sell/Hold) for rebalancing logic
         
+        const firebaseConfig = FIREBASE_CONFIG; 
+
+
         // UI elements
         const marketDataContainer = document.getElementById('market-data-container');
         const holdingsList = document.getElementById('holdings-list');
         const overallPnlEl = document.getElementById('overall-pnl');
-        const totalInvestedEl = document.getElementById('total-invested');
-        const totalValueEl = document.getElementById('total-value');
+        const totalInvestedAedEl = document.getElementById('total-invested-aed');
+        const totalValueAedEl = document.getElementById('total-value-aed');
+        const totalValueUsdEl = document.getElementById('total-value-usd');
+        const formStatusEl = document.getElementById('form-status');
+        const investmentForm = document.getElementById('investment-form');
         const investmentCard = document.getElementById('investment-card');
-        const loginModal = document.getElementById('login-modal');
-        const loginForm = document.getElementById('login-form');
-        const loginErrorMsg = document.getElementById('login-error-message');
+        const ownerAccessMessage = document.getElementById('owner-access-message');
+        const signInOwnerBtn = document.getElementById('sign-in-owner');
+        const ownerLoginModal = document.getElementById('owner-login-modal');
+        const ownerLoginForm = document.getElementById('owner-login-form');
+        const loginStatusMessage = document.getElementById('login-status-message');
+        const rebalanceSuggestionsEl = document.getElementById('rebalance-suggestions');
         
-        // --- CORE FUNCTIONS DEFINED FIRST TO PREVENT REFERENCE ERRORS ---
-
-        // Utility functions
+        // Utility for exponential backoff retry logic
         async function fetchWithRetry(url, options = {}, maxRetries = 3) {
             for (let i = 0; i < maxRetries; i++) {
                 try {
@@ -240,19 +279,19 @@
                     }
                     return await response.json();
                 } catch (error) {
-                    console.error(`Attempt ${i + 1} failed: ${error.message}`);
-                    if (i === maxRetries - 1) throw error; // Re-throw on last attempt
+                    console.error(`Attempt ${i + 1} failed: ${error.message}`); 
+                    if (i === maxRetries - 1) throw error; 
                     const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
         }
 
+        // --- Core Application Functions (Defined early for hoisting safety) ---
+        
         function getClosingPrices(klines) {
             return klines.map(kline => parseFloat(kline[4]));
         }
-        
-        // --- TECHNICAL ANALYSIS FUNCTIONS (RSI + MA + MACD) ---
 
         function calculateSMAHistory(prices, period) {
             const smaValues = [];
@@ -275,18 +314,28 @@
             if (prices.length < period + 1) return null; 
 
             let changes = [];
-            for (let i = prices.length - period; i < prices.length; i++) {
+            for (let i = 1; i < prices.length; i++) {
                 changes.push(prices[i] - prices[i - 1]);
             }
-
-            let sumGain = changes.reduce((acc, c) => acc + Math.max(0, c), 0);
-            let sumLoss = changes.reduce((acc, c) => acc + Math.max(0, -c), 0);
             
-            const avgGain = sumGain / period;
-            const avgLoss = sumLoss / period;
+            // Calculate initial average gain/loss over the first 'period'
+            let sumGain = 0;
+            let sumLoss = 0;
+            for (let i = 0; i < period; i++) {
+                sumGain += Math.max(0, changes[i]);
+                sumLoss += Math.max(0, -changes[i]);
+            }
+
+            let avgGain = sumGain / period;
+            let avgLoss = sumLoss / period;
+            
+            // Smoothed RSI calculation for the remaining data points
+            for (let i = period; i < changes.length; i++) {
+                avgGain = (avgGain * (period - 1) + Math.max(0, changes[i])) / period;
+                avgLoss = (avgLoss * (period - 1) + Math.max(0, -changes[i])) / period;
+            }
 
             if (avgLoss === 0 && avgGain > 0) return 100;
-            if (avgGain === 0 && avgLoss > 0) return 0;
             if (avgGain === 0 && avgLoss === 0) return 50;
 
             const RS = avgGain / avgLoss;
@@ -318,31 +367,50 @@
             if (prices.length < slowPeriod) return null; 
 
             let macdLineHistory = [];
-            for (let i = slowPeriod - 1; i < prices.length; i++) {
-                const subset = prices.slice(0, i + 1);
-                const fastEMA = calculateEMA(subset, fastPeriod);
-                const slowEMA = calculateEMA(subset, slowPeriod);
+            let currentFastEMA = calculateEMA(prices.slice(0, slowPeriod), fastPeriod);
+            let currentSlowEMA = calculateEMA(prices.slice(0, slowPeriod), slowPeriod);
+            
+            if (currentFastEMA === null || currentSlowEMA === null) return null;
 
-                if (fastEMA !== null && slowEMA !== null) {
-                    macdLineHistory.push(fastEMA - slowEMA);
-                }
+            macdLineHistory.push(currentFastEMA - currentSlowEMA);
+
+            const fastMultiplier = 2 / (fastPeriod + 1);
+            const slowMultiplier = 2 / (slowPeriod + 1);
+
+            for (let i = slowPeriod; i < prices.length; i++) {
+                currentFastEMA = (prices[i] - currentFastEMA) * fastMultiplier + currentFastEMA;
+                currentSlowEMA = (prices[i] - currentSlowEMA) * slowMultiplier + currentSlowEMA;
+                macdLineHistory.push(currentFastEMA - currentSlowEMA);
             }
             
             if (macdLineHistory.length < signalPeriod) {
                  return { macdLine: macdLineHistory.pop() || null, signalLine: null, histogram: null };
             }
             
+            // Calculate Signal Line EMA
+            let signalLine = calculateEMA(macdLineHistory, signalPeriod);
+            
+            // Re-calculate the final signal line accurately using the full history
+            let finalSignalLine = 0;
+            for (let i = 0; i < signalPeriod; i++) {
+                finalSignalLine += macdLineHistory[i];
+            }
+            finalSignalLine /= signalPeriod;
+            
+            const signalMultiplier = 2 / (signalPeriod + 1);
+            for (let i = signalPeriod; i < macdLineHistory.length; i++) {
+                 finalSignalLine = (macdLineHistory[i] - finalSignalLine) * signalMultiplier + finalSignalLine;
+            }
+            signalLine = finalSignalLine;
+            
             const latestMacdLine = macdLineHistory[macdLineHistory.length - 1];
-            const signalLine = calculateEMA(macdLineHistory, signalPeriod);
             const histogram = latestMacdLine - signalLine;
 
             return { macdLine: latestMacdLine, signalLine, histogram };
         }
 
-
         function generateSignal(symbol, price, klines) {
             const closingPrices = getClosingPrices(klines);
-
             const ema12 = calculateEMA(closingPrices, 12);
             const ema26 = calculateEMA(closingPrices, 26);
             const rsi = calculateRSI(closingPrices, 14);
@@ -351,21 +419,10 @@
             let signal = 'HOLD';
             let strategy = 'Waiting for confirmation.';
             let icon = 'pause';
-            let advice = 'Low conviction. Await clearer trend and momentum alignment.';
             let strength = '';
 
             if (rsi === null || ema12 === null || ema26 === null || macdData.signalLine === null) { 
-                return { 
-                    signal: 'HOLD', 
-                    strategy: 'Gathering more data for indicators.', 
-                    advice: 'Hold off on trades. Missing data for robust analysis.', 
-                    icon: 'pause',
-                    longTermAdvice: 'Long-term trend assessment pending.',
-                    rsi: 'N/A',
-                    macd: 'N/A',
-                    signalLine: 'N/A',
-                    histogram: 'N/A'
-                };
+                return { signal: 'HOLD', strategy: 'Gathering data.', icon: 'pause', rsi: 'N/A', macd: 'N/A', signalLine: 'N/A', histogram: 'N/A' };
             }
             
             const isMacdBullish = macdData.macdLine > macdData.signalLine;
@@ -375,46 +432,35 @@
             const isGoldenCross = ema12 > ema26;
             const isDeathCross = ema12 < ema26;
 
-            
             if (isMacdBullish && isGoldenCross && isRSIHealthyForBuy) {
-                signal = 'BUY'; icon = 'zap'; 
-                strategy = 'MACD Crossover (Momentum) + Golden Cross (Trend) confirmed.';
-                advice = 'High probability entry. Momentum shift aligned with underlying uptrend.';
+                signal = 'BUY';
+                icon = 'zap'; 
+                strategy = 'MACD & Golden Cross alignment.';
                 strength = ' (High Conviction)';
-            } 
-            else if (isMacdBearish && isDeathCross && isRSIHealthyForSell) {
-                signal = 'SELL'; icon = 'alert-triangle'; 
-                strategy = 'MACD Crossover (Momentum) + Death Cross (Trend) confirmed.';
-                advice = 'High probability exit/short. Momentum shift aligned with underlying downtrend.';
+            } else if (isMacdBearish && isDeathCross && isRSIHealthyForSell) {
+                signal = 'SELL';
+                icon = 'alert-triangle'; 
+                strategy = 'MACD & Death Cross alignment.';
                 strength = ' (High Conviction)';
-            }
-            else if (isMacdBullish && isRSIHealthyForBuy) {
-                signal = 'HOLD'; icon = 'trending-up';
-                strategy = 'MACD Bullish Crossover (Momentum). Weak trend bias.';
-                advice = 'Cautious mid-term buying opportunity. Wait for trend confirmation (Golden Cross).';
+            } else if (isMacdBullish) {
+                signal = 'HOLD'; 
+                icon = 'trending-up';
+                strategy = 'MACD Bullish Crossover (Momentum shift).';
                 strength = ' (Mid Conviction)';
-            }
-            else if (isMacdBearish && isRSIHealthyForSell) {
-                signal = 'HOLD'; icon = 'trending-down';
-                strategy = 'MACD Bearish Crossover (Momentum). Weak trend bias.';
-                advice = 'Cautious mid-term selling opportunity. Wait for trend confirmation (Death Cross).';
+            } else if (isMacdBearish) {
+                signal = 'HOLD'; 
+                icon = 'trending-down';
+                strategy = 'MACD Bearish Crossover (Momentum shift).';
                 strength = ' (Mid Conviction)';
+            } else {
+                signal = 'HOLD';
+                icon = 'pause';
+                strategy = 'Consolidation/Low Momentum.';
             }
-            else {
-                signal = 'HOLD'; icon = 'pause';
-                strategy = `RSI: ${rsi.toFixed(2)}. Market consolidation or high risk.`;
-                advice = 'Stay on the sidelines. Low confidence in signals.';
-            }
-
-            const longTermAdvice = closingPrices[closingPrices.length - 1] > ema26 ? 
-                                   'Long-term bias is bullish (Price > EMA 26).' : 
-                                   'Long-term bias is bearish or neutral (Price < EMA 26).';
 
             return { 
                 signal, 
                 strategy: strategy + strength, 
-                advice, 
-                longTermAdvice, 
                 icon, 
                 rsi: rsi.toFixed(2),
                 macd: macdData.macdLine !== null ? macdData.macdLine.toFixed(4) : 'N/A',
@@ -423,7 +469,6 @@
             };
         }
         
-        // --- CHARTING FUNCTION ---
         function renderChart(symbol, klines) {
             const closingPrices = getClosingPrices(klines);
             const sma12Data = calculateSMAHistory(closingPrices, 12);
@@ -437,6 +482,7 @@
             }
 
             const labels = klines.map((_, index) => index);
+            
             const chartData = closingPrices.map(priceUSD => priceUSD * AED_RATE);
             const sma12ChartData = sma12Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
             const sma26ChartData = sma26Data.history.map(priceUSD => isNaN(priceUSD) ? NaN : priceUSD * AED_RATE);
@@ -449,8 +495,8 @@
                         {
                             label: 'Price (AED)',
                             data: chartData,
-                            borderColor: '#A78BFA', /* Violet 400 for chart line */
-                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                            borderColor: '#A855F7', // Fuchsia 500 Accent
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
                             pointRadius: 0,
                             borderWidth: 1.5,
                             fill: false,
@@ -460,8 +506,7 @@
                         {
                             label: 'SMA 12',
                             data: sma12ChartData,
-                            borderColor: '#10b981', // Emerald 500 (Faster MA)
-                            backgroundColor: '#10b981',
+                            borderColor: '#34D399', // Emerald 400 (Faster MA)
                             pointRadius: 0,
                             borderWidth: 1,
                             fill: false,
@@ -471,8 +516,7 @@
                         {
                             label: 'SMA 26',
                             data: sma26ChartData,
-                            borderColor: '#fbbf24', // Amber 400 (Slower MA)
-                            backgroundColor: '#fbbf24',
+                            borderColor: '#F87171', // Red 400 (Slower MA)
                             pointRadius: 0,
                             borderWidth: 1,
                             fill: false,
@@ -495,29 +539,123 @@
                             beginAtZero: false,
                             suggestedMin: Math.min(...chartData.filter(v => !isNaN(v))) * 0.99,
                             suggestedMax: Math.max(...chartData.filter(v => !isNaN(v))) * 1.01,
-                            grid: { color: 'rgba(71, 85, 105, 0.3)' }
                         }
                     }
                 }
             });
         }
+        
+        function calculateRebalanceSuggestions(totalValueAED) {
+            const suggestions = [];
+            const investedCoins = investments.map(i => i.currency);
+            
+            // 1. Calculate current weights
+            const weights = {};
+            const totalInvestedWeight = investedCoins.length;
+            
+            if (totalInvestedWeight === 0 || totalValueAED === 0) {
+                rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-400 py-2 text-sm">No investments to analyze.</p>';
+                return;
+            }
 
-        // --- DATA FETCHING & RENDERING (MAIN LOOP) ---
+            // Calculate current value and total value for each coin
+            const currentCoinValues = {};
+            investedCoins.forEach(currency => {
+                currentCoinValues[currency] = 0;
+            });
+
+            investments.forEach(item => {
+                const livePriceAED = livePrices[item.currency] || 0;
+                currentCoinValues[item.currency] += item.quantity * livePriceAED;
+            });
+
+            // Calculate target and drift
+            const targetWeightPercent = 100 / totalInvestedWeight;
+            
+            for (const currency of investedCoins) {
+                const currentValue = currentCoinValues[currency];
+                const currentWeightPercent = (currentValue / totalValueAED) * 100;
+                const driftPercent = currentWeightPercent - targetWeightPercent;
+                const signal = signalData[currency] || 'HOLD';
+                
+                const driftThreshold = Math.abs(driftPercent) > REBALANCE_THRESHOLD_PERCENT;
+
+                if (driftThreshold) {
+                    let requiredChangeAED = 0;
+                    let action = 'HOLD';
+                    let reason = '';
+                    
+                    const targetValue = totalValueAED * (targetWeightPercent / 100);
+                    requiredChangeAED = Math.abs(currentValue - targetValue);
+                    
+                    if (driftPercent > 0) { // Overweight (Need to Sell)
+                        reason = `Overweight (${currentWeightPercent.toFixed(1)}% vs ${targetWeightPercent.toFixed(1)}% Target)`;
+                        if (signal === 'SELL') {
+                            action = 'SELL';
+                            reason += ' - Aligned with SELL signal.';
+                        } else if (signal === 'BUY') {
+                            action = 'HOLD';
+                            reason += ' - CONFLICT: Ignoring SELL (Momentum is BUY).';
+                        }
+                    } else if (driftPercent < 0) { // Underweight (Need to Buy)
+                        reason = `Underweight (${currentWeightPercent.toFixed(1)}% vs ${targetWeightPercent.toFixed(1)}% Target)`;
+                        if (signal === 'BUY') {
+                            action = 'BUY';
+                            reason += ' - Aligned with BUY signal.';
+                        } else if (signal === 'SELL') {
+                            action = 'HOLD';
+                            reason += ' - CONFLICT: Ignoring BUY (Momentum is SELL).';
+                        }
+                    }
+
+                    if (action !== 'HOLD') {
+                        suggestions.push({
+                            currency,
+                            action,
+                            amountAED: requiredChangeAED,
+                            reason
+                        });
+                    }
+                }
+            }
+
+            if (suggestions.length === 0) {
+                rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-400 py-2 text-sm">Portfolio is balanced or signals conflict.</p>';
+            } else {
+                rebalanceSuggestionsEl.innerHTML = suggestions.map(s => {
+                    const colorClass = s.action === 'BUY' ? 'rebalance-buy' : 'rebalance-sell';
+                    const icon = s.action === 'BUY' ? 'trending-up' : 'trending-down';
+                    return `
+                        <div class="p-3 rounded-lg ${colorClass} flex justify-between items-center text-sm font-medium">
+                            <span class="flex items-center">
+                                <i data-lucide="${icon}" class="w-4 h-4 mr-2"></i>
+                                ${s.action} ${s.amountAED.toFixed(2)} AED worth of ${s.currency}
+                            </span>
+                            <span class="text-xs text-slate-200 ml-2">(${s.reason})</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+            window.lucide.createIcons();
+        }
+
         async function fetchRealTimeData() {
             console.log("Fetching market data...");
-            marketDataContainer.innerHTML = '<p class="col-span-full text-center text-slate-400 py-4">Updating...</p>';
+            // Ensure container is cleared and populated only if fetching is successful
             
             const symbols = CRYPTO_SYMBOLS.map(s => s + 'USDT');
             
             try {
+                // 1. Fetch 24hr Ticker Data (for current price and % change)
                 const tickerUrl = `${BINANCE_BASE_URL}/ticker/24hr?symbols=["${symbols.join('","')}"]`;
                 const tickerData = await fetchWithRetry(tickerUrl);
 
+                // 2. Fetch Kline Data for all symbols (for MA/RSI/MACD calculation and Charting) 
                 const klinePromises = symbols.map(symbol => {
                     const klineUrl = `${BINANCE_BASE_URL}/klines?symbol=${symbol}&interval=5m&limit=40`;
                     return fetchWithRetry(klineUrl).catch(e => {
                         console.error(`Failed to fetch klines for ${symbol}:`, e);
-                        return [];
+                        return []; // Return empty array on failure
                     });
                 });
                 const klinesResults = await Promise.all(klinePromises);
@@ -526,9 +664,9 @@
                     klineMap.set(symbol.replace('USDT', ''), klinesResults[index]);
                 });
 
-
                 marketDataContainer.innerHTML = '';
                 const newPrices = {};
+                const newSignals = {};
                 
                 tickerData.forEach(item => {
                     const symbol = item.symbol.replace('USDT', '');
@@ -539,7 +677,13 @@
                     
                     newPrices[symbol] = currentPriceAED;
                     
-                    const signalInfo = generateSignal(symbol, currentPriceUSD, klines);
+                    let signalInfo = { signal: 'HOLD', strategy: 'N/A', icon: 'pause', rsi: 'N/A', macd: 'N/A', signalLine: 'N/A', histogram: 'N/A' };
+                    
+                    if (klines && klines.length > 0) {
+                        signalInfo = generateSignal(symbol, currentPriceUSD, klines);
+                    }
+                    
+                    newSignals[symbol] = signalInfo.signal; // Store signal for rebalancing
                     
                     const colorClass = signalInfo.signal === 'BUY' ? 'signal-buy' : 
                                        signalInfo.signal === 'SELL' ? 'signal-sell' : 'signal-hold';
@@ -550,13 +694,13 @@
                     const macdHist = signalInfo.histogram !== 'N/A' ? parseFloat(signalInfo.histogram) : 0;
                     const macdHistClass = macdHist >= 0 ? 'macd-hist-up' : 'macd-hist-down';
                     
-                    const defaultThesisText = 'Click to set your plan (e.g., Short-term target: 100 AED, Long-term HODL).';
+                    const defaultThesisText = 'Click to set your plan (e.g., Short-term target, Long-term HODL).';
                     const savedThesis = userTheses[symbol] || defaultThesisText;
+                    
+                    // Owner check for edit access
+                    const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
+                    const editableClass = isOwner ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-800 cursor-default';
 
-                    const isOwner = userId === OWNER_ID;
-                    const contentEditable = isOwner ? 'true' : 'false';
-                    const focusRingClass = isOwner ? 'focus:ring-fuchsia-500' : '';
-                    const cursorStyle = isOwner ? 'cursor-text' : 'cursor-default';
 
                     const html = `
                         <div class="card p-4 border border-slate-700 flex flex-col justify-between">
@@ -568,35 +712,31 @@
                                 </div>
                             </div>
                             <div class="flex flex-col mb-3">
-                                <p class="text-3xl font-extrabold ${priceClass}">${currentPriceAED.toFixed(2)} <span class="text-sm font-normal text-slate-400">AED</span></p>
+                                <p class="text-2xl font-extrabold ${priceClass}">${currentPriceAED.toFixed(2)} <span class="text-sm font-normal text-slate-400">AED</span></p>
+                                <p class="text-lg font-medium text-slate-400">$${currentPriceUSD.toFixed(2)} USD</p>
                                 <p class="text-sm ${priceClass} mt-1">${sign}${priceChangePercent.toFixed(2)}% (24h)</p>
                             </div>
                             
-                            <!-- Chart Visualization -->
-                            <div class="h-24 w-full mb-3 border border-slate-600 rounded-md p-1 bg-slate-700">
+                            <div class="h-24 w-full mb-3 border border-slate-700 rounded-md p-1 bg-slate-800">
                                 <canvas id="chart-${symbol}"></canvas>
                             </div>
                             
                             <div class="space-y-1 text-sm text-slate-400 border-t border-slate-700 pt-2">
-                                <p><span class="font-medium">Signal Basis:</span> ${signalInfo.strategy}</p>
-                                <p><span class="font-medium">RSI (14):</span> ${signalInfo.rsi}</p>
+                                <p><span class="font-medium text-slate-300">Signal Basis:</span> ${signalInfo.strategy}</p>
+                                <p><span class="font-medium text-slate-300">RSI (14):</span> ${signalInfo.rsi}</p>
                                 <p class="text-xs">
-                                    <span class="font-medium">MACD (12/26/9):</span> ${signalInfo.macd} / ${signalInfo.signalLine} 
+                                    <span class="font-medium text-slate-300">MACD:</span> ${signalInfo.macd} / ${signalInfo.signalLine} 
                                     <span class="font-bold ${macdHistClass}"> [Hist: ${signalInfo.histogram}]</span>
                                 </p>
-                                <p><span class="font-medium">LT View:</span> ${signalInfo.longTermAdvice}</p>
                             </div>
-                            <!-- New Investment Thesis Section -->
                             <div class="mt-2 pt-2 border-t border-slate-700">
-                                <p class="text-xs font-medium text-slate-400 mb-1">My Thesis & Plan</p>
-                                <div contenteditable="${contentEditable}" 
+                                <p class="text-xs font-medium text-slate-500 mb-1">My Thesis & Plan</p>
+                                <div contenteditable="${isOwner ? 'true' : 'false'}" 
                                      id="thesis-${symbol}"
-                                     class="text-xs text-slate-200 bg-slate-700 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 ${focusRingClass} ${cursorStyle}"
+                                     class="text-xs text-slate-200 p-2 rounded-md min-h-[40px] focus:outline-none focus:ring-1 focus:ring-fuchsia-500 transition-colors ${editableClass}"
                                      data-symbol="${symbol}"
-                                     data-default-text="${defaultThesisText}"
-                                     onblur="${isOwner ? 'window.saveThesis(this)' : ''}">
+                                     onblur="window.saveThesis(this)">
                                     ${savedThesis}
-                                
                                 </div>
                             </div>
                         </div>
@@ -604,9 +744,12 @@
                     marketDataContainer.innerHTML += html;
                 });
                 
+                // Update global prices and signals, then re-render portfolio
                 livePrices = newPrices;
+                signalData = newSignals;
                 renderPortfolio();
 
+                // RENDER CHARTS
                 CRYPTO_SYMBOLS.forEach(symbol => {
                     const klines = klineMap.get(symbol);
                     if (klines && klines.length > 0) {
@@ -615,31 +758,30 @@
                 });
                 
                 window.lucide.createIcons();
-                checkOwnerAccess();
                 
             } catch (error) {
                 console.error("Error fetching market data:", error);
-                marketDataContainer.innerHTML = '<p class="col-span-full text-center text-red-400 py-4">Failed to fetch data from Binance. Retrying shortly...</p>';
+                marketDataContainer.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Failed to fetch data. Retrying shortly...</p>';
             }
         }
-
-        // --- PORTFOLIO & UI RENDERING ---
 
         function renderPortfolio() {
             if (!isAuthReady) return;
 
-            const isOwner = userId === OWNER_ID;
             let totalInvestedAED = 0;
             let totalValueAED = 0;
 
             holdingsList.innerHTML = ''; 
 
             if (investments.length === 0) {
+                rebalanceSuggestionsEl.innerHTML = '<p class="text-center text-slate-400 py-2 text-sm">No investments to analyze.</p>';
                 holdingsList.innerHTML = '<p class="text-center text-slate-400 py-4">No investments added yet.</p>';
             }
 
             investments.forEach(item => {
                 const livePriceAED = livePrices[item.currency] || 0;
+                const livePriceUSD = livePriceAED / AED_RATE;
+
                 const investedAmount = item.quantity * item.purchasePriceAED;
                 const currentValue = item.quantity * livePriceAED;
                 const pnl = currentValue - investedAmount;
@@ -649,87 +791,88 @@
                 totalValueAED += currentValue;
 
                 const pnlClass = pnl > 0 ? 'status-profit' : pnl < 0 ? 'status-loss' : 'status-zero';
-                
-                let alertHtml = '';
-                let holdingClasses = "border-slate-700 bg-slate-800";
 
-                const tpPrice = item.takeProfitAED;
-                const slPrice = item.stopLossAED;
-                
-                if (tpPrice && livePriceAED >= tpPrice) {
-                    alertHtml = `<p class="alert-tp text-xs font-semibold p-1 rounded-md mt-1 flex items-center"><i data-lucide="bell" class="w-3 h-3 mr-1"></i> TAKE PROFIT HIT: ${tpPrice.toFixed(2)} AED</p>`;
-                    holdingClasses = "alert-tp border-emerald-500 bg-emerald-900/40";
-                } else if (slPrice && livePriceAED <= slPrice) {
-                    alertHtml = `<p class="alert-sl text-xs font-semibold p-1 rounded-md mt-1 flex items-center"><i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i> STOP LOSS HIT: ${slPrice.toFixed(2)} AED</p>`;
-                    holdingClasses = "alert-sl border-red-500 bg-red-900/40";
-                } else if (tpPrice && livePriceAED > slPrice) {
-                    const proximityPercent = 0.05; 
-                    if (tpPrice > 0 && livePriceAED >= tpPrice * (1 - proximityPercent)) {
-                        alertHtml = `<p class="alert-tp text-xs font-semibold p-1 rounded-md mt-1">Approaching TP: ${tpPrice.toFixed(2)} AED</p>`;
-                    } else if (slPrice > 0 && livePriceAED <= slPrice * (1 + proximityPercent)) {
-                        alertHtml = `<p class="alert-sl text-xs font-semibold p-1 rounded-md mt-1">Approaching SL: ${slPrice.toFixed(2)} AED</p>`;
-                    }
+                // SL/TP Alert Check
+                let alertClass = '';
+                let alertMessage = '';
+
+                if (item.stopLossAED && livePriceAED <= item.stopLossAED) {
+                    alertClass = 'alert-sl';
+                    alertMessage = `SL HIT: Price at ${livePriceAED.toFixed(2)} AED`;
+                } else if (item.takeProfitAED && livePriceAED >= item.takeProfitAED) {
+                    alertClass = 'alert-tp';
+                    alertMessage = `TP REACHED: Price at ${livePriceAED.toFixed(2)} AED`;
                 }
+                
+                const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
+                const removeButton = isOwner ? 
+                    `<button onclick="window.removeInvestment('${item.id}')" class="ml-4 p-2 text-red-400 hover:text-red-600 rounded-full transition duration-150">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>` : '';
 
-                const deleteButtonHtml = isOwner ? `
-                    <button onclick="window.removeInvestment('${item.id}')" class="mt-2 p-1 text-red-400 hover:text-red-300 rounded-full transition duration-150">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                ` : '';
 
                 const holdingHtml = `
-                    <div id="holding-${item.id}" class="flex justify-between items-start p-3 rounded-lg border ${holdingClasses}">
+                    <div id="holding-${item.id}" class="flex justify-between items-center p-3 bg-slate-700 rounded-lg border border-slate-600 ${alertClass}">
                         <div class="flex-1 min-w-0">
                             <p class="text-lg font-bold text-slate-100">${item.currency} <span class="text-sm font-normal text-slate-400">(${item.quantity.toFixed(4)})</span></p>
+                            ${alertMessage ? `<p class="text-xs font-semibold mt-1">${alertMessage}</p>` : ''}
                             <p class="text-xs text-slate-400 mt-1">
-                                Avg. Buy: ${item.purchasePriceAED.toFixed(2)} AED
+                                Avg. Buy: ${item.purchasePriceAED.toFixed(2)} AED ($${(item.purchasePriceAED/AED_RATE).toFixed(2)})
                             </p>
-                            <div class="text-xs text-slate-400 mt-1 space-x-2">
-                                ${item.takeProfitAED ? `<span class="font-semibold text-emerald-400">TP: ${item.takeProfitAED.toFixed(2)} AED</span>` : ''}
-                                ${item.stopLossAED ? `<span class="font-semibold text-red-400">SL: ${item.stopLossAED.toFixed(2)} AED</span>` : ''}
-                            </div>
-                            ${alertHtml}
+                            <p class="text-xs text-slate-400">
+                                Current: ${livePriceAED.toFixed(2)} AED ($${livePriceUSD.toFixed(2)})
+                            </p>
+                            ${(item.stopLossAED || item.takeProfitAED) ? 
+                                `<p class="text-xs text-slate-500">
+                                    SL: ${item.stopLossAED ? item.stopLossAED.toFixed(2) + ' AED' : 'N/A'} | 
+                                    TP: ${item.takeProfitAED ? item.takeProfitAED.toFixed(2) + ' AED' : 'N/A'}
+                                </p>` : ''}
                         </div>
-                        <div class="text-right ml-4 min-w-[100px]">
+                        <div class="text-right ml-4">
                             <p class="text-lg font-bold ${pnlClass}">${pnl.toFixed(2)} AED</p>
                             <p class="text-sm ${pnlClass}">(${pnlPercent.toFixed(2)}%)</p>
-                            ${deleteButtonHtml}
                         </div>
+                        ${removeButton}
                     </div>
                 `;
                 holdingsList.innerHTML += holdingHtml;
             });
 
+            // Update Summary
             const overallPNLValue = totalValueAED - totalInvestedAED;
             const overallPNLPercent = totalInvestedAED > 0 ? (overallPNLValue / totalInvestedAED) * 100 : 0;
             const overallPNLClass = overallPNLValue > 0 ? 'status-profit' : overallPNLValue < 0 ? 'status-loss' : 'status-zero';
 
-            totalInvestedEl.textContent = totalInvestedAED.toFixed(2);
-            totalValueEl.textContent = totalValueAED.toFixed(2);
+            totalInvestedAedEl.textContent = totalInvestedAED.toFixed(2);
+            totalValueAedEl.textContent = totalValueAED.toFixed(2);
+            totalValueUsdEl.textContent = (totalValueAED / AED_RATE).toFixed(2);
+
             overallPnlEl.textContent = `${overallPNLValue.toFixed(2)} AED (${overallPNLPercent.toFixed(2)}%)`;
             overallPnlEl.className = `text-3xl font-extrabold ${overallPNLClass}`;
             
+            // Rebalance check (only runs if investments exist)
+            calculateRebalanceSuggestions(totalValueAED);
+
             window.lucide.createIcons();
+            
+            // Recheck access after portfolio renders
+            checkOwnerAccess();
         }
 
         // --- FIRESTORE OPERATIONS ---
 
         // Path for portfolio entries: artifacts/{appId}/portfolio_entries
         function getCollectionRef() {
-            if (!db) {
-                console.error("Firebase not initialized.");
-                return null;
-            }
-            return firebase.collection(db, `artifacts/${appId}/portfolio_entries`);
+            if (!db) return null;
+            const collectionPath = `artifacts/${FIREBASE_CONFIG.appId}/portfolio_entries`;
+            return firebase.collection(db, collectionPath);
         }
 
         // Path for thesis document: artifacts/{appId}/config/thesis_data
         async function getThesisDocRef() {
-            if (!db) {
-                console.error("Firebase not initialized for preferences.");
-                return null;
-            }
-            return firebase.doc(db, `artifacts/${appId}/config/thesis_data`);
+            if (!db) return null;
+            const configDocPath = `artifacts/${FIREBASE_CONFIG.appId}/config`;
+            return firebase.doc(db, configDocPath, 'thesis_data');
         }
 
         async function loadTheses() {
@@ -746,314 +889,192 @@
             }
         }
 
-        async function saveThesis(element) {
-            if (!isAuthReady || userId !== OWNER_ID) return;
+        window.saveThesis = async function(element) {
+            const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
+            if (!isOwner) return;
 
             const symbol = element.getAttribute('data-symbol');
             const defaultText = element.getAttribute('data-default-text');
-            const content = element.textContent.trim() || defaultText;
+            const content = element.textContent.trim();
             
-            userTheses[symbol] = content;
+            if (content === defaultText || content === '') {
+                delete userTheses[symbol];
+            } else {
+                userTheses[symbol] = content;
+            }
 
-            const docRef = await getThesisDocRef();
+            const docRef = getThesisDocRef();
             if (!docRef) return;
-
+            
             try {
                 await firebase.setDoc(docRef, { theses: userTheses }, { merge: true });
             } catch (e) {
-                console.error("Error saving thesis:", e);
+                console.error("Error saving user thesis:", e);
             }
         }
-        window.saveThesis = saveThesis; 
 
-        function setupFirestoreListener() {
-            const portfolioRef = getCollectionRef();
-            if (!portfolioRef) return;
-
-            const q = firebase.query(portfolioRef);
+        async function saveInvestment(event) {
+            event.preventDefault();
+            formStatusEl.textContent = 'Adding investment...';
             
-            firebase.onSnapshot(q, (snapshot) => {
-                const newInvestments = [];
-                snapshot.forEach((doc) => {
-                    newInvestments.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-                investments = newInvestments;
-                renderPortfolio();
-            }, (error) => {
-                console.error("Firestore listen error:", error);
-            });
-        }
-        
-        async function addInvestment(data) {
-            if (userId !== OWNER_ID) return;
+            const currency = document.getElementById('currency').value;
+            const quantity = parseFloat(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+            const tp = document.getElementById('takeProfit').value ? parseFloat(document.getElementById('takeProfit').value) : null;
+            const sl = document.getElementById('stopLoss').value ? parseFloat(document.getElementById('stopLoss').value) : null;
 
-            const currentFormStatusEl = document.getElementById('form-status');
-            const portfolioRef = getCollectionRef();
-            if (!portfolioRef) {
-                currentFormStatusEl.textContent = "Error: Authentication not complete.";
-                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
+            if (!currency || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
+                formStatusEl.textContent = 'Please enter valid quantity and price.';
                 return;
             }
+
+            const collectionRef = getCollectionRef();
+            if (!collectionRef) return;
 
             try {
-                await firebase.addDoc(portfolioRef, data);
-                currentFormStatusEl.textContent = "Investment added successfully!";
-                currentFormStatusEl.className = "text-emerald-400 text-sm mt-2";
-                document.getElementById('investment-form').reset();
+                await firebase.addDoc(collectionRef, {
+                    currency: currency,
+                    quantity: quantity,
+                    purchasePriceAED: price,
+                    takeProfitAED: tp,
+                    stopLossAED: sl,
+                    timestamp: firebase.Timestamp.fromDate(new Date())
+                });
+                
+                formStatusEl.textContent = 'Investment added successfully!';
+                investmentForm.reset();
             } catch (e) {
+                formStatusEl.textContent = 'Error saving: Check console.';
                 console.error("Error adding document: ", e);
-                currentFormStatusEl.textContent = "Error saving investment. Check console for details.";
-                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
             }
         }
 
-        async function removeInvestment(id) {
-            if (userId !== OWNER_ID) return;
+        window.removeInvestment = async function(id) {
+            const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
+            if (!isOwner) return;
 
-            const docRef = firebase.doc(getCollectionRef(), id);
+            const docRef = firebase.doc(db, `artifacts/${FIREBASE_CONFIG.appId}/portfolio_entries`, id);
             
-            if (!docRef) return;
-
-            if (!window.confirm("Are you sure you want to remove this investment?")) {
-                return;
-            }
-
             try {
                 await firebase.deleteDoc(docRef);
             } catch (e) {
                 console.error("Error removing document: ", e);
             }
         }
-        window.removeInvestment = removeInvestment; 
         
-        // --- AUTHENTICATION AND ACCESS CONTROL LOGIC ---
-        
-        function showOwnerLogin() {
-            loginModal.classList.remove('hidden');
-        }
-
-        function hideOwnerLogin() {
-            loginModal.classList.add('hidden');
-            checkOwnerAccess();
-        }
+        // --- AUTHENTICATION & INITIALIZATION ---
 
         function checkOwnerAccess() {
-            const isOwner = userId === OWNER_ID;
-            const currentInvestmentCard = document.getElementById('investment-card');
+            const isOwner = auth.currentUser && auth.currentUser.uid === OWNER_ID;
             
             if (isOwner) {
-                currentInvestmentCard.innerHTML = `
-                    <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
-                        <i data-lucide="plus-circle" class="mr-2 neon-accent"></i>
-                        Add Investment
-                    </h2>
-                    <form id="investment-form" class="space-y-4">
-                        <div>
-                            <label for="currency" class="block text-sm font-medium text-slate-400">Currency</label>
-                            <select id="currency" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-600 bg-slate-700 text-slate-200 focus:outline-none focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm rounded-md shadow-sm">
-                                <option value="">Select Coin</option>
-                                <option value="BTC">Bitcoin (BTC)</option>
-                                <option value="ETH">Ethereum (ETH)</option>
-                                <option value="CAKE">PancakeSwap (CAKE)</option>
-                                <option value="SOL">Solana (SOL)</option>
-                                <option value="BNB">Binance Coin (BNB)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="quantity" class="block text-sm font-medium text-slate-400">Quantity Purchased</label>
-                            <input type="number" step="any" id="quantity" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 0.5">
-                        </div>
-                        <div>
-                            <label for="price" class="block text-sm font-medium text-slate-400">Purchase Price (AED)</label>
-                            <input type="number" step="any" id="price" required class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 100000.00">
-                        </div>
-
-                        <div class="border-t border-slate-700 pt-4 space-y-3">
-                            <p class="text-sm font-semibold text-slate-200">Risk Management (Optional)</p>
-                            <div>
-                                <label for="takeProfit" class="block text-xs font-medium text-slate-400">Take-Profit (TP) Price (AED)</label>
-                                <input type="number" step="any" id="takeProfit" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 120000.00">
-                            </div>
-                            <div>
-                                <label for="stopLoss" class="block text-xs font-medium text-slate-400">Stop-Loss (SL) Price (AED)</label>
-                                <input type="number" step="any" id="stopLoss" class="mt-1 block w-full rounded-md border-slate-600 bg-slate-700 text-slate-200 shadow-sm p-2 focus:border-fuchsia-500 focus:ring-fuchsia-500" placeholder="e.g., 90000.00">
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-slate-900 transition duration-150 ease-in-out">
-                            Add Investment
-                        </button>
-                        <p id="form-status" class="text-center text-sm mt-2"></p>
-                    </form>
-                `;
-                // Re-attach event listeners after re-injecting HTML
-                document.getElementById('investment-form').addEventListener('submit', handleInvestmentFormSubmit);
-                window.lucide.createIcons();
-                
+                ownerAccessMessage.classList.add('hidden');
+                investmentForm.classList.remove('hidden');
+                ownerLoginModal.classList.remove('flex'); // Hide modal if they logged in
+                ownerLoginModal.classList.add('hidden');
+                console.log("Owner Access: GRANTED.");
             } else {
-                // Guest view: Show the sign-in button
-                currentInvestmentCard.innerHTML = `
-                    <h2 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center">
-                        <i data-lucide="lock" class="mr-2 text-red-500"></i> Write Access Restricted
-                    </h2>
-                    <p class="text-slate-400 mb-4">
-                        To add or edit portfolio entries, please sign in using the owner credentials.
-                    </p>
-                    <button id="sign-in-button" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 bg-fuchsia-400 hover:bg-fuchsia-300 transition duration-150">
-                        Sign In as Owner
-                    </button>
-                `;
-                document.getElementById('sign-in-button').addEventListener('click', showOwnerLogin);
-                window.lucide.createIcons();
+                ownerAccessMessage.classList.remove('hidden');
+                investmentForm.classList.add('hidden');
+                console.log("Owner Access: DENIED. Viewing as Guest.");
             }
-        }
-        
-        // --- EVENT HANDLERS ---
-        
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('owner-email').value;
-            const password = document.getElementById('owner-password').value;
-            
-            loginErrorMsg.classList.add('hidden');
-            
-            try {
-                // This attempts to sign in with the email/password
-                const userCredential = await firebase.signInWithEmailAndPassword(auth, email, password);
-                
-                if (userCredential.user.uid === OWNER_ID) {
-                    // Success! The mobile session now has the correct, permanent UID.
-                    hideOwnerLogin();
-                } else {
-                    // This block should ideally never be reached now
-                    await firebase.auth.signOut(auth);
-                    loginErrorMsg.textContent = "Sign-in successful, but credentials do not match the tracker's Owner ID.";
-                    loginErrorMsg.classList.remove('hidden');
-                }
-                
-            } catch (error) {
-                console.error("Login failed:", error);
-                loginErrorMsg.textContent = "Login failed: Invalid email or password.";
-                loginErrorMsg.classList.remove('hidden');
-            }
-        });
-        
-        // Use a wrapper function for the form submission logic
-        function handleInvestmentFormSubmit(e) {
-            e.preventDefault();
-            
-            // Re-get elements that were newly injected
-            const currency = document.getElementById('currency').value;
-            const quantity = parseFloat(document.getElementById('quantity').value);
-            const price = parseFloat(document.getElementById('price').value);
-            const takeProfit = document.getElementById('takeProfit').value;
-            const stopLoss = document.getElementById('stopLoss').value;
-            const currentFormStatusEl = document.getElementById('form-status');
-
-            if (userId !== OWNER_ID) {
-                currentFormStatusEl.textContent = "Write access denied. Please sign in as owner.";
-                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
-                return;
-            }
-            
-            currentFormStatusEl.textContent = "";
-
-            if (!currency || isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
-                currentFormStatusEl.textContent = "Please fill out all mandatory fields with valid positive numbers.";
-                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
-                return;
-            }
-
-            // Validation logic...
-            if (takeProfit && parseFloat(takeProfit) <= price) {
-                currentFormStatusEl.textContent = "Take-Profit should be higher than the Purchase Price.";
-                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
-                return;
-            }
-            if (stopLoss && parseFloat(stopLoss) >= price) {
-                currentFormStatusEl.textContent = "Stop-Loss should be lower than the Purchase Price.";
-                currentFormStatusEl.className = "text-red-400 text-sm mt-2";
-                return;
-            }
-
-
-            const newInvestment = {
-                currency: currency,
-                quantity: quantity,
-                purchasePriceAED: price,
-                takeProfitAED: takeProfit ? parseFloat(takeProfit) : null,
-                stopLossAED: stopLoss ? parseFloat(stopLoss) : null,
-                timestamp: new Date().toISOString()
-            };
-            addInvestment(newInvestment);
+            // FIX: Removed recursive call to renderPortfolio here.
         }
 
-        
-        // --- INITIALIZATION ---
-        
-        async function initFirebase() {
+        async function initializeFirebase() {
             if (!firebaseConfig || !firebaseConfig.projectId) {
-                console.error("Firebase configuration is missing or invalid. Portfolio tracking disabled.");
-                isAuthReady = true;
-                return;
-            }
-
-            // Set debug level for logging in console
-            firebase.setLogLevel('debug');
-            
-            try {
-                const app = firebase.initializeApp(firebaseConfig);
-                db = firebase.getFirestore(app);
-                auth = firebase.getAuth(app);
-                
-                // 1. Check existing session, or authenticate user anonymously
-                if (!auth.currentUser) {
-                    await firebase.signInAnonymously(auth);
-                }
-
-            } catch(error) {
-                console.error("Firebase Initialization or Authentication failed:", error);
-                isAuthReady = true; 
-                return; 
+                 console.error("Firebase configuration not found. Portfolio tracking will be disabled.");
+                 return;
             }
             
-            // 2. Set up Auth State Listener (This runs immediately after step 1)
+            const app = firebase.initializeApp(firebaseConfig);
+            db = firebase.getFirestore(app);
+            auth = firebase.getAuth(app);
+            firebase.setLogLevel('error');
+            
+            // Use anonymous sign-in for all users (guests and owner alike)
+            if (!auth.currentUser) {
+                await firebase.signInAnonymously(auth).catch(error => {
+                    console.error("Anonymous sign-in failed:", error);
+                });
+            }
+
             firebase.onAuthStateChanged(auth, async (user) => {
+                isAuthReady = true;
                 if (user) {
                     userId = user.uid;
-                    isAuthReady = true;
-                    console.log("Current User Authenticated. UID:", userId); 
+                    checkOwnerAccess();
                     
-                    // Load user preferences (thesis)
-                    await loadTheses(); 
-                    // 3. Setup Portfolio Listener
-                    setupFirestoreListener();
+                    // 1. Load Theses
+                    await loadTheses();
+                    
+                    // 2. Start Real-time Portfolio Listener
+                    const collectionRef = getCollectionRef();
+                    if (collectionRef) {
+                        firebase.onSnapshot(collectionRef, (snapshot) => {
+                            investments = snapshot.docs.map(doc => ({
+                                id: doc.id,
+                                ...doc.data()
+                            }));
+                            renderPortfolio(); // This is the primary call for rendering portfolio updates
+                        }, (error) => {
+                            console.error("Portfolio Snapshot Error:", error);
+                        });
+                    }
                 } else {
                     userId = null;
                     isAuthReady = true; 
                     console.log("User logged out or unauthorized.");
                 }
-                // 4. Update the UI based on ownership status
-                checkOwnerAccess();
+                // Check access controls after auth state changes
+                checkOwnerAccess(); 
+            });
+            
+            // Start the market data fetch immediately and then set interval
+            fetchRealTimeData();
+            setInterval(fetchRealTimeData, UPDATE_INTERVAL_MS);
+        }
+        
+        // --- EVENT LISTENERS ---
+        
+        // Set up the owner sign-in modal/button
+        if(signInOwnerBtn) {
+             signInOwnerBtn.addEventListener('click', () => {
+                ownerLoginModal.classList.remove('hidden');
+                ownerLoginModal.classList.add('flex');
+                loginStatusMessage.textContent = '';
+            });
+        }
+       
+        // Handle owner login submission
+        if(ownerLoginForm) {
+            ownerLoginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('owner-email').value;
+                const password = document.getElementById('owner-password').value;
+                loginStatusMessage.textContent = 'Signing in...';
+                
+                try {
+                    const userCredential = await firebase.signInWithEmailAndPassword(auth, email, password);
+                    
+                    // Check if the signed-in user is the actual OWNER_ID
+                    if (userCredential.user.uid === OWNER_ID) {
+                        ownerLoginModal.classList.remove('flex');
+                        ownerLoginModal.classList.add('hidden');
+                    } else {
+                        loginStatusMessage.textContent = 'Login successful, but this user is not the designated owner.';
+                        await auth.signOut();
+                    }
+                } catch (error) {
+                    console.error("Owner Login Failed:", error);
+                    loginStatusMessage.textContent = 'Error: Invalid email or password.';
+                }
             });
         }
 
-        // Main execution block
+        // Initialize App on load
         document.addEventListener('DOMContentLoaded', function() {
-            if (FIREBASE_CONFIG && FIREBASE_CONFIG.projectId) {
-                initFirebase();
-            } else {
-                console.warn("Portfolio tracking is disabled. Please provide your Firebase configuration in the FIREBASE_CONFIG variable.");
-                isAuthReady = true;
-            }
-            
-            // Start fetching market data immediately and then set interval
-            fetchRealTimeData();
-            setInterval(fetchRealTimeData, UPDATE_INTERVAL_MS);
+            initializeFirebase();
         });
 
     </script>
